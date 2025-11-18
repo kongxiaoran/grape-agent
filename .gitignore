@@ -57,3 +57,5 @@ docs/assets/backup/
 docs/assets/preview.html
 
 claude.md
+
+.agent_memory.json

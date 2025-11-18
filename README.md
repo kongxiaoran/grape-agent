@@ -23,11 +23,11 @@ This project comes packed with features designed for a robust and intelligent ag
     - [2. Choose Your Usage Mode](#2-choose-your-usage-mode)
       - [🚀 Quick Start Mode (Recommended for Beginners)](#-quick-start-mode-recommended-for-beginners)
       - [🔧 Development Mode](#-development-mode)
+  - [ACP \& Zed Editor Integration(optional)](#acp--zed-editor-integrationoptional)
   - [Usage Examples](#usage-examples)
     - [Task Execution](#task-execution)
     - [Using a Claude Skill (e.g., PDF Generation)](#using-a-claude-skill-eg-pdf-generation)
     - [Web Search \& Summarization (MCP Tool)](#web-search--summarization-mcp-tool)
-  - [ACP \& Zed Editor Integration](#acp--zed-editor-integration)
   - [Testing](#testing)
     - [Quick Run](#quick-run)
     - [Test Coverage](#test-coverage)
@@ -208,7 +208,7 @@ mini-agent --workspace /path/to/your/project
 
 > 📖 For more production deployment guidance, see [Production Guide](docs/PRODUCTION_GUIDE.md)
 
-## ACP & Zed Editor Integration
+## ACP & Zed Editor Integration(optional)
 
 Mini Agent supports the [Agent Communication Protocol (ACP)](https://github.com/modelcontextprotocol/protocol) for integration with code editors like Zed.
 
