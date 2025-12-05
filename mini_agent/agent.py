@@ -73,6 +73,11 @@ class Agent:
         # Initialize logger
         self.logger = AgentLogger()
 
+        # Token usage from last API response (updated after each LLM call)
+        self.api_total_tokens: int = 0
+        # Flag to skip token check right after summary (avoid consecutive triggers)
+        self._skip_next_token_check: bool = False
+
     def add_user_message(self, content: str):
         """Add a user message to history."""
         self.messages.append(Message(role="user", content=content))
@@ -142,14 +147,26 @@ class Agent:
         - Summarize content between each user-user pair (agent execution process)
         - If last round is still executing (has agent/tool messages but no next user), also summarize
         - Structure: system -> user1 -> summary1 -> user2 -> summary2 -> user3 -> summary3 (if executing)
-        """
-        estimated_tokens = self._estimate_tokens()
 
-        # If not exceeded, no summary needed
-        if estimated_tokens <= self.token_limit:
+        Summary is triggered when EITHER:
+        - Local token estimation exceeds limit
+        - API reported total_tokens exceeds limit
+        """
+        # Skip check if we just completed a summary (wait for next LLM call to update api_total_tokens)
+        if self._skip_next_token_check:
+            self._skip_next_token_check = False
             return
 
-        print(f"\n{Colors.BRIGHT_YELLOW}📊 Token estimate: {estimated_tokens}/{self.token_limit}{Colors.RESET}")
+        estimated_tokens = self._estimate_tokens()
+
+        # Check both local estimation and API reported tokens
+        should_summarize = estimated_tokens > self.token_limit or self.api_total_tokens > self.token_limit
+
+        # If neither exceeded, no summary needed
+        if not should_summarize:
+            return
+
+        print(f"\n{Colors.BRIGHT_YELLOW}📊 Token usage - Local estimate: {estimated_tokens}, API reported: {self.api_total_tokens}, Limit: {self.token_limit}{Colors.RESET}")
         print(f"{Colors.BRIGHT_YELLOW}🔄 Triggering message history summarization...{Colors.RESET}")
 
         # Find all user message indices (skip system prompt)
@@ -193,9 +210,14 @@ class Agent:
         # Replace message list
         self.messages = new_messages
 
+        # Skip next token check to avoid consecutive summary triggers
+        # (api_total_tokens will be updated after next LLM call)
+        self._skip_next_token_check = True
+
         new_tokens = self._estimate_tokens()
-        print(f"{Colors.BRIGHT_GREEN}✓ Summary completed, tokens reduced from {estimated_tokens} to {new_tokens}{Colors.RESET}")
+        print(f"{Colors.BRIGHT_GREEN}✓ Summary completed, local tokens: {estimated_tokens} → {new_tokens}{Colors.RESET}")
         print(f"{Colors.DIM}  Structure: system + {len(user_indices)} user messages + {summary_count} summaries{Colors.RESET}")
+        print(f"{Colors.DIM}  Note: API token count will update on next LLM call{Colors.RESET}")
 
     async def _create_summary(self, messages: list[Message], round_num: int) -> str:
         """Create summary for one execution round
@@ -297,6 +319,10 @@ Requirements:
                     error_msg = f"LLM call failed: {str(e)}"
                     print(f"\n{Colors.BRIGHT_RED}❌ Error:{Colors.RESET} {error_msg}")
                 return error_msg
+
+            # Accumulate API reported token usage
+            if response.usage:
+                self.api_total_tokens = response.usage.total_tokens
 
             # Log LLM response
             self.logger.log_response(

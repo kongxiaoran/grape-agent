@@ -6,7 +6,7 @@ from typing import Any
 import anthropic
 
 from ..retry import RetryConfig, async_retry
-from ..schema import FunctionCall, LLMResponse, Message, ToolCall
+from ..schema import FunctionCall, LLMResponse, Message, TokenUsage, ToolCall
 from .base import LLMClientBase
 
 logger = logging.getLogger(__name__)
@@ -230,11 +230,21 @@ class AnthropicClient(LLMClientBase):
                     )
                 )
 
+        # Extract token usage from response
+        usage = None
+        if hasattr(response, "usage") and response.usage:
+            usage = TokenUsage(
+                prompt_tokens=response.usage.input_tokens or 0,
+                completion_tokens=response.usage.output_tokens or 0,
+                total_tokens=(response.usage.input_tokens or 0) + (response.usage.output_tokens or 0),
+            )
+
         return LLMResponse(
             content=text_content,
             thinking=thinking_content if thinking_content else None,
             tool_calls=tool_calls if tool_calls else None,
             finish_reason=response.stop_reason or "stop",
+            usage=usage,
         )
 
     async def generate(

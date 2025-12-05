@@ -7,7 +7,7 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from ..retry import RetryConfig, async_retry
-from ..schema import FunctionCall, LLMResponse, Message, ToolCall
+from ..schema import FunctionCall, LLMResponse, Message, TokenUsage, ToolCall
 from .base import LLMClientBase
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class OpenAIClient(LLMClientBase):
             tools: Optional list of tools
 
         Returns:
-            OpenAI ChatCompletion message
+            OpenAI ChatCompletion response (full response including usage)
 
         Raises:
             Exception: API call failed
@@ -74,7 +74,8 @@ class OpenAIClient(LLMClientBase):
 
         # Use OpenAI SDK's chat.completions.create
         response = await self.client.chat.completions.create(**params)
-        return response.choices[0].message
+        # Return full response to access usage info
+        return response
 
     def _convert_tools(self, tools: list[Any]) -> list[dict[str, Any]]:
         """Convert tools to OpenAI format.
@@ -203,26 +204,29 @@ class OpenAIClient(LLMClientBase):
         """Parse OpenAI response into LLMResponse.
 
         Args:
-            response: OpenAI ChatCompletionMessage response
+            response: OpenAI ChatCompletion response (full response object)
 
         Returns:
             LLMResponse object
         """
+        # Get message from response
+        message = response.choices[0].message
+
         # Extract text content
-        text_content = response.content or ""
+        text_content = message.content or ""
 
         # Extract thinking content from reasoning_details
         thinking_content = ""
-        if hasattr(response, "reasoning_details") and response.reasoning_details:
+        if hasattr(message, "reasoning_details") and message.reasoning_details:
             # reasoning_details is a list of reasoning blocks
-            for detail in response.reasoning_details:
+            for detail in message.reasoning_details:
                 if hasattr(detail, "text"):
                     thinking_content += detail.text
 
         # Extract tool calls
         tool_calls = []
-        if response.tool_calls:
-            for tool_call in response.tool_calls:
+        if message.tool_calls:
+            for tool_call in message.tool_calls:
                 # Parse arguments from JSON string
                 arguments = json.loads(tool_call.function.arguments)
 
@@ -237,11 +241,21 @@ class OpenAIClient(LLMClientBase):
                     )
                 )
 
+        # Extract token usage from response
+        usage = None
+        if hasattr(response, "usage") and response.usage:
+            usage = TokenUsage(
+                prompt_tokens=response.usage.prompt_tokens or 0,
+                completion_tokens=response.usage.completion_tokens or 0,
+                total_tokens=response.usage.total_tokens or 0,
+            )
+
         return LLMResponse(
             content=text_content,
             thinking=thinking_content if thinking_content else None,
             tool_calls=tool_calls if tool_calls else None,
             finish_reason="stop",  # OpenAI doesn't provide finish_reason in the message
+            usage=usage,
         )
 
     async def generate(

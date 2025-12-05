@@ -18,7 +18,7 @@ from typing import List
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
 
@@ -483,8 +483,11 @@ async def run_agent(workspace_dir: Path):
         event.current_buffer.insert_text("\n")
 
     # Create prompt session with history and auto-suggest
+    # Use FileHistory for persistent history across sessions (stored in user's home directory)
+    history_file = Path.home() / ".mini-agent" / ".history"
+    history_file.parent.mkdir(parents=True, exist_ok=True)
     session = PromptSession(
-        history=InMemoryHistory(),
+        history=FileHistory(str(history_file)),
         auto_suggest=AutoSuggestFromHistory(),
         completer=command_completer,
         style=prompt_style,
