@@ -42,6 +42,7 @@ class AnthropicClient(LLMClientBase):
         self.client = anthropic.AsyncAnthropic(
             base_url=api_base,
             api_key=api_key,
+            default_headers={"Authorization": f"Bearer {api_key}"},
         )
 
     async def _make_api_request(
