@@ -154,7 +154,7 @@ python examples/02_simple_agent.py
 ### 路径 1: 快速上手
 1. 运行 `01_basic_tools.py` - 了解工具
 2. 运行 `02_simple_agent.py` - 运行第一个 Agent
-3. 直接使用 `main.py` 进入交互模式
+3. 直接使用 `mini-agent` 进入交互模式
 
 ### 路径 2: 深入理解
 1. 阅读并运行所有示例 (01 → 04)

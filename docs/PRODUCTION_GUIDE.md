@@ -142,7 +142,7 @@ USER agent
 RUN uv sync
 
 # Start the application
-CMD ["uv", "run", "python", "main.py"]
+CMD ["uv", "run", "mini-agent"]
 ```
 
 #### 3.3.2 File System Permissions

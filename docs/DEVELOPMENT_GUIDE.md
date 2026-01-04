@@ -46,7 +46,6 @@ mini-agent/
 ├── tests/                   # Test code
 ├── docs/                    # Documentation
 ├── workspace/               # Working directory
-├── main.py                  # Interactive entry point
 └── pyproject.toml           # Project configuration
 ```
 
@@ -54,7 +53,7 @@ mini-agent/
 
 ### 2.1 Interactive Commands
 
-When running the agent in interactive mode (`python main.py`), the following commands are available:
+When running the agent in interactive mode (`mini-agent`), the following commands are available:
 
 | Command                | Description                                                 |
 | ---------------------- | ----------------------------------------------------------- |
@@ -182,7 +181,7 @@ class MyTool(Tool):
                 content=f"Error: {str(e)}"
             )
 
-# In main.py or agent initialization code
+# In cli.py or agent initialization code
 from mini_agent.tools.my_tool import MyTool
 
 # Add the new tool when creating the Agent
@@ -389,7 +388,7 @@ Failed to load MCP server
 #### Enable Verbose Logging
 
 ```python
-# At the beginning of main.py or a test file
+# At the beginning of cli.py or a test file
 import logging
 
 logging.basicConfig(

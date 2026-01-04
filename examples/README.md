@@ -154,7 +154,7 @@ These examples are all refined from test cases in the `tests/` directory:
 ### Path 1: Quick Start
 1. Run `01_basic_tools.py` - Learn about tools
 2. Run `02_simple_agent.py` - Run your first Agent
-3. Go directly to interactive mode with `main.py`
+3. Go directly to interactive mode with `mini-agent`
 
 ### Path 2: Deep Understanding
 1. Read and run all examples (01 → 04)

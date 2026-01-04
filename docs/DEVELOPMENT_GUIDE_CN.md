@@ -20,16 +20,16 @@
     - [3.4 初始化 Claude Skills（推荐）](#34-初始化-claude-skills推荐)
     - [3.5 添加新的Skill](#35-添加新的skill)
     - [3.6 自定义系统提示词](#36-自定义系统提示词)
-      - [可自定义的内容](#可自定义的内容)
+      - [可定制内容包括：](#可定制内容包括)
   - [4. 故障排查](#4-故障排查)
     - [4.1 常见问题](#41-常见问题)
       - [API 密钥配置错误](#api-密钥配置错误)
       - [依赖安装失败](#依赖安装失败)
       - [MCP 工具加载失败](#mcp-工具加载失败)
     - [4.2 调试技巧](#42-调试技巧)
-      - [启用详细日志](#启用详细日志)
+      - [启用 Debug 日志](#启用-debug-日志)
       - [使用 Python 调试器](#使用-python-调试器)
-      - [检查工具调用](#检查工具调用)
+      - [监控工具调用](#监控工具调用)
 
 ---
 
@@ -47,7 +47,6 @@ mini-agent/
 ├── tests/                   # 测试代码
 ├── docs/                    # 文档
 ├── workspace/               # 工作目录
-├── main.py                  # 交互式入口
 └── pyproject.toml           # 项目配置
 ```
 
@@ -55,7 +54,7 @@ mini-agent/
 
 ### 2.1 交互式命令
 
-在交互模式 (通过 `python main.py` 启动) 下运行 Agent 时，您可以使用以下命令：
+在交互模式 (通过 `mini-agent` 启动) 下运行 Agent 时，您可以使用以下命令：
 
 | 命令                   | 说明                                             |
 | ---------------------- | ------------------------------------------------ |
@@ -183,7 +182,7 @@ class MyTool(Tool):
                 content=f"错误: {str(e)}"
             )
 
-# 在 main.py 或 Agent 的初始化代码中
+# 在 cli.py 或 Agent 的初始化代码中
 from mini_agent.tools.my_tool import MyTool
 
 # 创建 Agent 实例时，将新工具加入列表
@@ -391,7 +390,7 @@ Failed to load MCP server
 #### 启用 Debug 日志
 
 ```python
-# 在 main.py 或相关测试文件的开头添加以下代码：
+# 在 cli.py 或相关测试文件的开头添加以下代码：
 import logging
 
 logging.basicConfig(

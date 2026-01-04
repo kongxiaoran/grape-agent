@@ -189,7 +189,7 @@ async def demo_interactive_mode():
     print("Interactive Mini Agent")
     print("=" * 60)
     print("\nThis demo shows multi-turn conversation.")
-    print("(In production, use main.py for full interactive mode)")
+    print("(In production, use `mini-agent` for full interactive mode)")
 
     # Load config
     config_path = Path("mini_agent/config/config.yaml")
@@ -269,7 +269,7 @@ async def main():
     print("All demos completed! ✅")
     print("=" * 60)
     print("\n💡 Next step: Try the interactive mode with:")
-    print("   python main.py\n")
+    print("   mini-agent\n")
 
 
 if __name__ == "__main__":
