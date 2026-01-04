@@ -232,12 +232,18 @@ class AnthropicClient(LLMClientBase):
                 )
 
         # Extract token usage from response
+        # Anthropic usage includes: input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens
         usage = None
         if hasattr(response, "usage") and response.usage:
+            input_tokens = response.usage.input_tokens or 0
+            output_tokens = response.usage.output_tokens or 0
+            cache_read_tokens = getattr(response.usage, "cache_read_input_tokens", 0) or 0
+            cache_creation_tokens = getattr(response.usage, "cache_creation_input_tokens", 0) or 0
+            total_input_tokens = input_tokens + cache_read_tokens + cache_creation_tokens
             usage = TokenUsage(
-                prompt_tokens=response.usage.input_tokens or 0,
-                completion_tokens=response.usage.output_tokens or 0,
-                total_tokens=(response.usage.input_tokens or 0) + (response.usage.output_tokens or 0),
+                prompt_tokens=total_input_tokens,
+                completion_tokens=output_tokens,
+                total_tokens=total_input_tokens + output_tokens,
             )
 
         return LLMResponse(
