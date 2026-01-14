@@ -106,7 +106,13 @@ class MiniMaxACPAgent:
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         state = self._sessions.get(params.sessionId)
         if not state:
-            return PromptResponse(stopReason="refusal")
+            # Auto-create session if not found (compatibility with clients that skip newSession)
+            logger.warning(f"Session '{params.sessionId}' not found, auto-creating new session")
+            new_session = await self.newSession(NewSessionRequest(cwd=None))
+            state = self._sessions.get(new_session.sessionId)
+            if not state:
+                logger.error("Failed to auto-create session")
+                return PromptResponse(stopReason="refusal")
         state.cancelled = False
         user_text = "\n".join(block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "") for block in params.prompt)
         state.agent.messages.append(Message(role="user", content=user_text))
