@@ -2,11 +2,12 @@
 Mini Agent - Interactive Runtime Example
 
 Usage:
-    mini-agent [--workspace DIR]
+    mini-agent [--workspace DIR] [--task TASK]
 
 Examples:
-    mini-agent                              # Use current directory as workspace
-    mini-agent --workspace /path/to/dir     # Use specific workspace directory
+    mini-agent                              # Use current directory as workspace (interactive mode)
+    mini-agent --workspace /path/to/dir     # Use specific workspace directory (interactive mode)
+    mini-agent --task "create a file"       # Execute a task non-interactively
 """
 
 import argparse
@@ -306,6 +307,13 @@ Examples:
         help="Workspace directory (default: current directory)",
     )
     parser.add_argument(
+        "--task",
+        "-t",
+        type=str,
+        default=None,
+        help="Execute a task non-interactively and exit",
+    )
+    parser.add_argument(
         "--version",
         "-v",
         action="version",
@@ -459,11 +467,28 @@ def add_workspace_tools(tools: List[Tool], config: Config, workspace_dir: Path):
         print(f"{Colors.GREEN}✅ Loaded session note tool{Colors.RESET}")
 
 
-async def run_agent(workspace_dir: Path):
-    """Run interactive Agent
+async def _quiet_cleanup():
+    """Clean up MCP connections, suppressing noisy asyncgen teardown tracebacks."""
+    # Silence the asyncgen finalization noise that anyio/mcp emits when
+    # stdio_client's task group is torn down across tasks.  The handler is
+    # intentionally NOT restored: asyncgen finalization happens during
+    # asyncio.run() shutdown (after run_agent returns), so restoring the
+    # handler here would still let the noise through.  Since this runs
+    # right before process exit, swallowing late exceptions is safe.
+    loop = asyncio.get_event_loop()
+    loop.set_exception_handler(lambda _loop, _ctx: None)
+    try:
+        await cleanup_mcp_connections()
+    except Exception:
+        pass
+
+
+async def run_agent(workspace_dir: Path, task: str = None):
+    """Run Agent in interactive or non-interactive mode.
 
     Args:
         workspace_dir: Workspace directory path
+        task: If provided, execute this task and exit (non-interactive mode)
     """
     session_start = datetime.now()
 
@@ -558,7 +583,7 @@ async def run_agent(workspace_dir: Path):
         system_prompt = system_prompt_path.read_text(encoding="utf-8")
         print(f"{Colors.GREEN}✅ Loaded system prompt (from: {system_prompt_path}){Colors.RESET}")
     else:
-        system_prompt = "You are Mini-Agent, an intelligent assistant powered by MiniMax M2.1 that can help users complete various tasks."
+        system_prompt = "You are Mini-Agent, an intelligent assistant powered by MiniMax M2.5 that can help users complete various tasks."
         print(f"{Colors.YELLOW}⚠️  System prompt not found, using default{Colors.RESET}")
 
     # 6. Inject Skills Metadata into System Prompt (Progressive Disclosure - Level 1)
@@ -585,8 +610,24 @@ async def run_agent(workspace_dir: Path):
     )
 
     # 8. Display welcome information
-    print_banner()
-    print_session_info(agent, workspace_dir, config.llm.model)
+    if not task:
+        print_banner()
+        print_session_info(agent, workspace_dir, config.llm.model)
+
+    # 8.5 Non-interactive mode: execute task and exit
+    if task:
+        print(f"\n{Colors.BRIGHT_BLUE}Agent{Colors.RESET} {Colors.DIM}›{Colors.RESET} {Colors.DIM}Executing task...{Colors.RESET}\n")
+        agent.add_user_message(task)
+        try:
+            await agent.run()
+        except Exception as e:
+            print(f"\n{Colors.RED}❌ Error: {e}{Colors.RESET}")
+        finally:
+            print_stats(agent, session_start)
+
+        # Cleanup MCP connections
+        await _quiet_cleanup()
+        return
 
     # 9. Setup prompt_toolkit session
     # Command completer
@@ -797,12 +838,7 @@ async def run_agent(workspace_dir: Path):
             print(f"{Colors.DIM}{'─' * 60}{Colors.RESET}\n")
 
     # 11. Cleanup MCP connections
-    try:
-        print(f"{Colors.BRIGHT_CYAN}Cleaning up MCP connections...{Colors.RESET}")
-        await cleanup_mcp_connections()
-        print(f"{Colors.GREEN}✅ Cleanup complete{Colors.RESET}\n")
-    except Exception as e:
-        print(f"{Colors.YELLOW}Error during cleanup (can be ignored): {e}{Colors.RESET}\n")
+    await _quiet_cleanup()
 
 
 def main():
@@ -830,7 +866,7 @@ def main():
     workspace_dir.mkdir(parents=True, exist_ok=True)
 
     # Run the agent (config always loaded from package directory)
-    asyncio.run(run_agent(workspace_dir))
+    asyncio.run(run_agent(workspace_dir, task=args.task))
 
 
 if __name__ == "__main__":

@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any, Literal
 
 from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
 from mcp.client.sse import sse_client
+from mcp.client.stdio import stdio_client
 from mcp.client.streamable_http import streamablehttp_client
 
 from .base import Tool, ToolResult
@@ -269,9 +269,16 @@ class MCPServerConnection:
     async def disconnect(self):
         """Properly disconnect from the MCP server."""
         if self.exit_stack:
-            await self.exit_stack.aclose()
-            self.exit_stack = None
-            self.session = None
+            try:
+                await self.exit_stack.aclose()
+            except Exception:
+                # anyio cancel scope may raise RuntimeError or ExceptionGroup
+                # when stdio_client's task group is closed from a different
+                # task context during shutdown.
+                pass
+            finally:
+                self.exit_stack = None
+                self.session = None
 
 
 # Global connections registry

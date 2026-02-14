@@ -5,7 +5,6 @@ LLM providers (Anthropic or OpenAI) through the provider parameter.
 """
 
 import asyncio
-import os
 from pathlib import Path
 
 import yaml
@@ -28,7 +27,7 @@ async def demo_anthropic_provider():
     client = LLMClient(
         api_key=config["api_key"],
         provider=LLMProvider.ANTHROPIC,  # Specify Anthropic provider
-        model=config.get("model", "MiniMax-M2.1"),
+        model=config.get("model", "MiniMax-M2.5"),
     )
 
     print(f"Provider: {client.provider}")
@@ -63,7 +62,7 @@ async def demo_openai_provider():
     client = LLMClient(
         api_key=config["api_key"],
         provider=LLMProvider.OPENAI,  # Specify OpenAI provider
-        model=config.get("model", "MiniMax-M2.1"),
+        model=config.get("model", "MiniMax-M2.5"),
     )
 
     print(f"Provider: {client.provider}")
@@ -97,7 +96,7 @@ async def demo_default_provider():
     # Initialize client without specifying provider (defaults to Anthropic)
     client = LLMClient(
         api_key=config["api_key"],
-        model=config.get("model", "MiniMax-M2.1"),
+        model=config.get("model", "MiniMax-M2.5"),
     )
 
     print(f"Provider (default): {client.provider}")
@@ -130,13 +129,13 @@ async def demo_provider_comparison():
     anthropic_client = LLMClient(
         api_key=config["api_key"],
         provider=LLMProvider.ANTHROPIC,
-        model=config.get("model", "MiniMax-M2.1"),
+        model=config.get("model", "MiniMax-M2.5"),
     )
 
     openai_client = LLMClient(
         api_key=config["api_key"],
         provider=LLMProvider.OPENAI,
-        model=config.get("model", "MiniMax-M2.1"),
+        model=config.get("model", "MiniMax-M2.5"),
     )
 
     # Same question for both
@@ -187,4 +186,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

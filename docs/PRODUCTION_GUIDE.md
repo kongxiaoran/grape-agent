@@ -16,12 +16,12 @@ This project is a **teaching-level demo** that demonstrates the core concepts an
 
 ### What We've Implemented (Demo Level)
 
-| Feature                  | Demo Implementation                   |
-| --------------------- | --------------------------- |
+| Feature                | Demo Implementation                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | **Context Management** | ✅ Simple persistence via SessionNoteTool with file storage; basic summarization when approaching context window limit |
-| **Tool Calling**          | ✅ Basic Read/Write/Edit/Bash |
-| **Error Handling**          | ✅ Basic exception catching              |
-| **Logging**              | ✅ Simple print output           |
+| **Tool Calling**       | ✅ Basic Read/Write/Edit/Bash                                                                                          |
+| **Error Handling**     | ✅ Basic exception catching                                                                                            |
+| **Logging**            | ✅ Simple print output                                                                                                 |
 
 
 ## 2. Upgrade Directions
@@ -34,7 +34,7 @@ This project is a **teaching-level demo** that demonstrates the core concepts an
 
 ### 2.2 Model Fallback Mechanism
 
-Currently using a single fixed model (MiniMax-M2.1), which will directly report errors on failure.
+Currently using a single fixed model (MiniMax-M2.5), which will directly report errors on failure.
 
 - Introduce a model pool by configuring multiple model accounts to improve availability
 - Introduce automatic health checks, failure removal, circuit breaker strategies for the model pool
