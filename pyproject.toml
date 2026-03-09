@@ -22,11 +22,13 @@ dependencies = [
     "anthropic>=0.39.0",
     "openai>=1.57.4",
     "agent-client-protocol>=0.6.0",
+    "lark-oapi>=1.0.0",
 ]
 
 [project.scripts]
 mini-agent = "mini_agent.cli:main"
 mini-agent-acp = "mini_agent.acp.server:main"
+mini-agent-feishu = "mini_agent.feishu.server_ws:main"
 
 [project.optional-dependencies]
 dev = [

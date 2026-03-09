@@ -27,16 +27,16 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
 
-from mini_agent import LLMClient
 from mini_agent.agent import Agent
 from mini_agent.config import Config
-from mini_agent.schema import LLMProvider
+from mini_agent.runtime_factory import (
+    add_workspace_tools as add_workspace_tools_shared,
+    build_runtime_bundle,
+    initialize_base_tools as initialize_base_tools_shared,
+)
+from mini_agent.session_store import AgentSessionStore
 from mini_agent.tools.base import Tool
-from mini_agent.tools.bash_tool import BashKillTool, BashOutputTool, BashTool
-from mini_agent.tools.file_tools import EditTool, ReadTool, WriteTool
-from mini_agent.tools.mcp_loader import cleanup_mcp_connections, load_mcp_tools_async, set_mcp_timeout_config
-from mini_agent.tools.note_tool import SessionNoteTool
-from mini_agent.tools.skill_tool import create_skill_tools
+from mini_agent.tools.mcp_loader import cleanup_mcp_connections
 from mini_agent.utils import calculate_display_width
 
 
@@ -348,86 +348,24 @@ async def initialize_base_tools(config: Config):
         Tuple of (list of tools, skill loader if skills enabled)
     """
 
-    tools = []
-    skill_loader = None
+    def _log(message: str) -> None:
+        lower = message.lower()
+        if lower.startswith("loading "):
+            print(f"{Colors.BRIGHT_CYAN}{message[0].upper() + message[1:]}{Colors.RESET}")
+            return
+        if "injected" in lower:
+            print(f"{Colors.GREEN}✅ {message[0].upper() + message[1:]}{Colors.RESET}")
+            return
+        if lower.startswith("loaded ") and "mcp timeouts" not in lower:
+            print(f"{Colors.GREEN}✅ {message[0].upper() + message[1:]}{Colors.RESET}")
+            return
+        if lower.startswith("mcp timeouts"):
+            print(f"{Colors.DIM}  {message}{Colors.RESET}")
+            return
+        print(f"{Colors.YELLOW}⚠️  {message[0].upper() + message[1:]}{Colors.RESET}")
 
-    # 1. Bash auxiliary tools (output monitoring and kill)
-    # Note: BashTool itself is created in add_workspace_tools() with workspace_dir as cwd
-    if config.tools.enable_bash:
-        bash_output_tool = BashOutputTool()
-        tools.append(bash_output_tool)
-        print(f"{Colors.GREEN}✅ Loaded Bash Output tool{Colors.RESET}")
-
-        bash_kill_tool = BashKillTool()
-        tools.append(bash_kill_tool)
-        print(f"{Colors.GREEN}✅ Loaded Bash Kill tool{Colors.RESET}")
-
-    # 3. Claude Skills (loaded from package directory)
-    if config.tools.enable_skills:
-        print(f"{Colors.BRIGHT_CYAN}Loading Claude Skills...{Colors.RESET}")
-        try:
-            # Resolve skills directory with priority search
-            # Expand ~ to user home directory for portability
-            skills_path = Path(config.tools.skills_dir).expanduser()
-            if skills_path.is_absolute():
-                skills_dir = str(skills_path)
-            else:
-                # Search in priority order:
-                # 1. Current directory (dev mode: ./skills or ./mini_agent/skills)
-                # 2. Package directory (installed: site-packages/mini_agent/skills)
-                search_paths = [
-                    skills_path,  # ./skills for backward compatibility
-                    Path("mini_agent") / skills_path,  # ./mini_agent/skills
-                    Config.get_package_dir() / skills_path,  # site-packages/mini_agent/skills
-                ]
-
-                # Find first existing path
-                skills_dir = str(skills_path)  # default
-                for path in search_paths:
-                    if path.exists():
-                        skills_dir = str(path.resolve())
-                        break
-
-            skill_tools, skill_loader = create_skill_tools(skills_dir)
-            if skill_tools:
-                tools.extend(skill_tools)
-                print(f"{Colors.GREEN}✅ Loaded Skill tool (get_skill){Colors.RESET}")
-            else:
-                print(f"{Colors.YELLOW}⚠️  No available Skills found{Colors.RESET}")
-        except Exception as e:
-            print(f"{Colors.YELLOW}⚠️  Failed to load Skills: {e}{Colors.RESET}")
-
-    # 4. MCP tools (loaded with priority search)
-    if config.tools.enable_mcp:
-        print(f"{Colors.BRIGHT_CYAN}Loading MCP tools...{Colors.RESET}")
-        try:
-            # Apply MCP timeout configuration from config.yaml
-            mcp_config = config.tools.mcp
-            set_mcp_timeout_config(
-                connect_timeout=mcp_config.connect_timeout,
-                execute_timeout=mcp_config.execute_timeout,
-                sse_read_timeout=mcp_config.sse_read_timeout,
-            )
-            print(
-                f"{Colors.DIM}  MCP timeouts: connect={mcp_config.connect_timeout}s, "
-                f"execute={mcp_config.execute_timeout}s, sse_read={mcp_config.sse_read_timeout}s{Colors.RESET}"
-            )
-
-            # Use priority search for mcp.json
-            mcp_config_path = Config.find_config_file(config.tools.mcp_config_path)
-            if mcp_config_path:
-                mcp_tools = await load_mcp_tools_async(str(mcp_config_path))
-                if mcp_tools:
-                    tools.extend(mcp_tools)
-                    print(f"{Colors.GREEN}✅ Loaded {len(mcp_tools)} MCP tools (from: {mcp_config_path}){Colors.RESET}")
-                else:
-                    print(f"{Colors.YELLOW}⚠️  No available MCP tools found{Colors.RESET}")
-            else:
-                print(f"{Colors.YELLOW}⚠️  MCP config file not found: {config.tools.mcp_config_path}{Colors.RESET}")
-        except Exception as e:
-            print(f"{Colors.YELLOW}⚠️  Failed to load MCP tools: {e}{Colors.RESET}")
-
-    print()  # Empty line separator
+    tools, skill_loader = await initialize_base_tools_shared(config, log=_log)
+    print()
     return tools, skill_loader
 
 
@@ -441,29 +379,12 @@ def add_workspace_tools(tools: List[Tool], config: Config, workspace_dir: Path):
         config: Configuration object
         workspace_dir: Workspace directory path
     """
-    # Ensure workspace directory exists
-    workspace_dir.mkdir(parents=True, exist_ok=True)
-
-    # Bash tool - needs workspace as cwd for command execution
+    add_workspace_tools_shared(tools=tools, config=config, workspace_dir=workspace_dir)
     if config.tools.enable_bash:
-        bash_tool = BashTool(workspace_dir=str(workspace_dir))
-        tools.append(bash_tool)
         print(f"{Colors.GREEN}✅ Loaded Bash tool (cwd: {workspace_dir}){Colors.RESET}")
-
-    # File tools - need workspace to resolve relative paths
     if config.tools.enable_file_tools:
-        tools.extend(
-            [
-                ReadTool(workspace_dir=str(workspace_dir)),
-                WriteTool(workspace_dir=str(workspace_dir)),
-                EditTool(workspace_dir=str(workspace_dir)),
-            ]
-        )
         print(f"{Colors.GREEN}✅ Loaded file operation tools (workspace: {workspace_dir}){Colors.RESET}")
-
-    # Session note tool - needs workspace to store memory file
     if config.tools.enable_note:
-        tools.append(SessionNoteTool(memory_file=str(workspace_dir / ".agent_memory.json")))
         print(f"{Colors.GREEN}✅ Loaded session note tool{Colors.RESET}")
 
 
@@ -535,310 +456,262 @@ async def run_agent(workspace_dir: Path, task: str = None):
         print(f"{Colors.RED}❌ Error: Failed to load configuration file: {e}{Colors.RESET}")
         return
 
-    # 2. Initialize LLM client
-    from mini_agent.retry import RetryConfig as RetryConfigBase
+    from mini_agent.feishu.embedded_runner import EmbeddedFeishuRunner
 
-    # Convert configuration format
-    retry_config = RetryConfigBase(
-        enabled=config.llm.retry.enabled,
-        max_retries=config.llm.retry.max_retries,
-        initial_delay=config.llm.retry.initial_delay,
-        max_delay=config.llm.retry.max_delay,
-        exponential_base=config.llm.retry.exponential_base,
-        retryable_exceptions=(Exception,),
-    )
+    feishu_runner = EmbeddedFeishuRunner(config=config, config_path=config_path)
+    feishu_runner.start()
 
-    # Create retry callback function to display retry information in terminal
-    def on_retry(exception: Exception, attempt: int):
-        """Retry callback function to display retry information"""
-        print(f"\n{Colors.BRIGHT_YELLOW}⚠️  LLM call failed (attempt {attempt}): {str(exception)}{Colors.RESET}")
-        next_delay = retry_config.calculate_delay(attempt - 1)
-        print(f"{Colors.DIM}   Retrying in {next_delay:.1f}s (attempt {attempt + 1})...{Colors.RESET}")
+    try:
+        def on_retry(exception: Exception, attempt: int):
+            print(f"\n{Colors.BRIGHT_YELLOW}⚠️  LLM call failed (attempt {attempt}): {str(exception)}{Colors.RESET}")
+            initial_delay = config.llm.retry.initial_delay
+            exponential_base = config.llm.retry.exponential_base
+            max_delay = config.llm.retry.max_delay
+            next_delay = min(max_delay, initial_delay * (exponential_base ** max(0, attempt - 1)))
+            print(f"{Colors.DIM}   Retrying in {next_delay:.1f}s (attempt {attempt + 1})...{Colors.RESET}")
 
-    # Convert provider string to LLMProvider enum
-    provider = LLMProvider.ANTHROPIC if config.llm.provider.lower() == "anthropic" else LLMProvider.OPENAI
+        def runtime_log(message: str) -> None:
+            lower = message.lower()
+            normalized = message[0].upper() + message[1:] if message else message
+            if lower.startswith("loading "):
+                print(f"{Colors.BRIGHT_CYAN}{normalized}{Colors.RESET}")
+                return
+            if lower.startswith("loaded ") and "mcp timeouts" not in lower:
+                print(f"{Colors.GREEN}✅ {normalized}{Colors.RESET}")
+                return
+            if lower.startswith("injected "):
+                print(f"{Colors.GREEN}✅ {normalized}{Colors.RESET}")
+                return
+            if lower.startswith("mcp timeouts"):
+                print(f"{Colors.DIM}  {message}{Colors.RESET}")
+                return
+            print(f"{Colors.YELLOW}⚠️  {normalized}{Colors.RESET}")
 
-    llm_client = LLMClient(
-        api_key=config.llm.api_key,
-        provider=provider,
-        api_base=config.llm.api_base,
-        model=config.llm.model,
-        retry_config=retry_config if config.llm.retry.enabled else None,
-    )
+        runtime_bundle = await build_runtime_bundle(config=config, log=runtime_log, on_retry=on_retry)
 
-    # Set retry callback
-    if config.llm.retry.enabled:
-        llm_client.retry_callback = on_retry
-        print(f"{Colors.GREEN}✅ LLM retry mechanism enabled (max {config.llm.retry.max_retries} retries){Colors.RESET}")
+        if config.llm.retry.enabled:
+            print(f"{Colors.GREEN}✅ LLM retry mechanism enabled (max {config.llm.retry.max_retries} retries){Colors.RESET}")
+        print()
 
-    # 3. Initialize base tools (independent of workspace)
-    tools, skill_loader = await initialize_base_tools(config)
+        session_store = AgentSessionStore()
 
-    # 4. Add workspace-dependent tools
-    add_workspace_tools(tools, config, workspace_dir)
-
-    # 5. Load System Prompt (with priority search)
-    system_prompt_path = Config.find_config_file(config.agent.system_prompt_path)
-    if system_prompt_path and system_prompt_path.exists():
-        system_prompt = system_prompt_path.read_text(encoding="utf-8")
-        print(f"{Colors.GREEN}✅ Loaded system prompt (from: {system_prompt_path}){Colors.RESET}")
-    else:
-        system_prompt = "You are Mini-Agent, an intelligent assistant powered by MiniMax M2.5 that can help users complete various tasks."
-        print(f"{Colors.YELLOW}⚠️  System prompt not found, using default{Colors.RESET}")
-
-    # 6. Inject Skills Metadata into System Prompt (Progressive Disclosure - Level 1)
-    if skill_loader:
-        skills_metadata = skill_loader.get_skills_metadata_prompt()
-        if skills_metadata:
-            # Replace placeholder with actual metadata
-            system_prompt = system_prompt.replace("{SKILLS_METADATA}", skills_metadata)
-            print(f"{Colors.GREEN}✅ Injected {len(skill_loader.loaded_skills)} skills metadata into system prompt{Colors.RESET}")
-        else:
-            # Remove placeholder if no skills
-            system_prompt = system_prompt.replace("{SKILLS_METADATA}", "")
-    else:
-        # Remove placeholder if skills not enabled
-        system_prompt = system_prompt.replace("{SKILLS_METADATA}", "")
-
-    # 7. Create Agent
-    agent = Agent(
-        llm_client=llm_client,
-        system_prompt=system_prompt,
-        tools=tools,
-        max_steps=config.agent.max_steps,
-        workspace_dir=str(workspace_dir),
-    )
-
-    # 8. Display welcome information
-    if not task:
-        print_banner()
-        print_session_info(agent, workspace_dir, config.llm.model)
-
-    # 8.5 Non-interactive mode: execute task and exit
-    if task:
-        print(f"\n{Colors.BRIGHT_BLUE}Agent{Colors.RESET} {Colors.DIM}›{Colors.RESET} {Colors.DIM}Executing task...{Colors.RESET}\n")
-        agent.add_user_message(task)
-        try:
-            await agent.run()
-        except Exception as e:
-            print(f"\n{Colors.RED}❌ Error: {e}{Colors.RESET}")
-        finally:
-            print_stats(agent, session_start)
-
-        # Cleanup MCP connections
-        await _quiet_cleanup()
-        return
-
-    # 9. Setup prompt_toolkit session
-    # Command completer
-    command_completer = WordCompleter(
-        ["/help", "/clear", "/history", "/stats", "/log", "/exit", "/quit", "/q"],
-        ignore_case=True,
-        sentence=True,
-    )
-
-    # Custom style for prompt
-    prompt_style = Style.from_dict(
-        {
-            "prompt": "#00ff00 bold",  # Green and bold
-            "separator": "#666666",  # Gray
-        }
-    )
-
-    # Custom key bindings
-    kb = KeyBindings()
-
-    @kb.add("c-u")  # Ctrl+U: Clear current line
-    def _(event):
-        """Clear the current input line"""
-        event.current_buffer.reset()
-
-    @kb.add("c-l")  # Ctrl+L: Clear screen (optional bonus)
-    def _(event):
-        """Clear the screen"""
-        event.app.renderer.clear()
-
-    @kb.add("c-j")  # Ctrl+J (对应 Ctrl+Enter)
-    def _(event):
-        """Insert a newline"""
-        event.current_buffer.insert_text("\n")
-
-    # Create prompt session with history and auto-suggest
-    # Use FileHistory for persistent history across sessions (stored in user's home directory)
-    history_file = Path.home() / ".mini-agent" / ".history"
-    history_file.parent.mkdir(parents=True, exist_ok=True)
-    session = PromptSession(
-        history=FileHistory(str(history_file)),
-        auto_suggest=AutoSuggestFromHistory(),
-        completer=command_completer,
-        style=prompt_style,
-        key_bindings=kb,
-    )
-
-    # 10. Interactive loop
-    while True:
-        try:
-            # Get user input using prompt_toolkit
-            user_input = await session.prompt_async(
-                [
-                    ("class:prompt", "You"),
-                    ("", " › "),
-                ],
-                multiline=False,
-                enable_history_search=True,
+        def create_terminal_agent() -> Agent:
+            terminal_tools = list(runtime_bundle.base_tools)
+            add_workspace_tools(terminal_tools, config, workspace_dir)
+            return Agent(
+                llm_client=runtime_bundle.llm_client,
+                system_prompt=runtime_bundle.system_prompt,
+                tools=terminal_tools,
+                max_steps=config.agent.max_steps,
+                workspace_dir=str(workspace_dir),
             )
-            user_input = user_input.strip()
 
-            if not user_input:
-                continue
+        terminal_session = await session_store.get_or_create("terminal", "main", create_terminal_agent)
+        agent = terminal_session.agent
 
-            # Handle commands
-            if user_input.startswith("/"):
-                command = user_input.lower()
+        # 8. Display welcome information
+        if not task:
+            print_banner()
+            print_session_info(agent, workspace_dir, config.llm.model)
 
-                if command in ["/exit", "/quit", "/q"]:
+        # 8.5 Non-interactive mode
+        if task:
+            print(f"\n{Colors.BRIGHT_BLUE}Agent{Colors.RESET} {Colors.DIM}›{Colors.RESET} {Colors.DIM}Executing task...{Colors.RESET}\n")
+            agent.add_user_message(task)
+            try:
+                await agent.run()
+            except Exception as e:
+                print(f"\n{Colors.RED}❌ Error: {e}{Colors.RESET}")
+            finally:
+                print_stats(agent, session_start)
+            return
+
+        # 9. Setup prompt_toolkit session
+        command_completer = WordCompleter(
+            ["/help", "/clear", "/history", "/stats", "/log", "/exit", "/quit", "/q"],
+            ignore_case=True,
+            sentence=True,
+        )
+
+        prompt_style = Style.from_dict(
+            {
+                "prompt": "#00ff00 bold",
+                "separator": "#666666",
+            }
+        )
+
+        kb = KeyBindings()
+
+        @kb.add("c-u")
+        def _(event):
+            event.current_buffer.reset()
+
+        @kb.add("c-l")
+        def _(event):
+            event.app.renderer.clear()
+
+        @kb.add("c-j")
+        def _(event):
+            event.current_buffer.insert_text("\n")
+
+        history_file = Path.home() / ".mini-agent" / ".history"
+        history_file.parent.mkdir(parents=True, exist_ok=True)
+        session = PromptSession(
+            history=FileHistory(str(history_file)),
+            auto_suggest=AutoSuggestFromHistory(),
+            completer=command_completer,
+            style=prompt_style,
+            key_bindings=kb,
+        )
+
+        # 10. Interactive loop
+        while True:
+            try:
+                user_input = await session.prompt_async(
+                    [
+                        ("class:prompt", "You"),
+                        ("", " › "),
+                    ],
+                    multiline=False,
+                    enable_history_search=True,
+                )
+                user_input = user_input.strip()
+
+                if not user_input:
+                    continue
+
+                if user_input.startswith("/"):
+                    command = user_input.lower()
+
+                    if command in ["/exit", "/quit", "/q"]:
+                        print(f"\n{Colors.BRIGHT_YELLOW}👋 Goodbye! Thanks for using Mini Agent{Colors.RESET}\n")
+                        print_stats(agent, session_start)
+                        break
+
+                    elif command == "/help":
+                        print_help()
+                        continue
+
+                    elif command == "/clear":
+                        old_count = len(agent.messages)
+                        session_store.pop("terminal", "main")
+                        terminal_session = await session_store.get_or_create("terminal", "main", create_terminal_agent)
+                        agent = terminal_session.agent
+                        print(f"{Colors.GREEN}✅ Cleared {old_count - 1} messages, starting new session{Colors.RESET}\n")
+                        continue
+
+                    elif command == "/history":
+                        print(f"\n{Colors.BRIGHT_CYAN}Current session message count: {len(agent.messages)}{Colors.RESET}\n")
+                        continue
+
+                    elif command == "/stats":
+                        print_stats(agent, session_start)
+                        continue
+
+                    elif command == "/log" or command.startswith("/log "):
+                        parts = user_input.split(maxsplit=1)
+                        if len(parts) == 1:
+                            show_log_directory(open_file_manager=True)
+                        else:
+                            filename = parts[1].strip("\"'")
+                            read_log_file(filename)
+                        continue
+
+                    else:
+                        print(f"{Colors.RED}❌ Unknown command: {user_input}{Colors.RESET}")
+                        print(f"{Colors.DIM}Type /help to see available commands{Colors.RESET}\n")
+                        continue
+
+                if user_input.lower() in ["exit", "quit", "q"]:
                     print(f"\n{Colors.BRIGHT_YELLOW}👋 Goodbye! Thanks for using Mini Agent{Colors.RESET}\n")
                     print_stats(agent, session_start)
                     break
 
-                elif command == "/help":
-                    print_help()
-                    continue
+                print(
+                    f"\n{Colors.BRIGHT_BLUE}Agent{Colors.RESET} {Colors.DIM}›{Colors.RESET} {Colors.DIM}Thinking... (Esc to cancel){Colors.RESET}\n"
+                )
+                agent.add_user_message(user_input)
 
-                elif command == "/clear":
-                    # Clear message history but keep system prompt
-                    old_count = len(agent.messages)
-                    agent.messages = [agent.messages[0]]  # Keep only system message
-                    print(f"{Colors.GREEN}✅ Cleared {old_count - 1} messages, starting new session{Colors.RESET}\n")
-                    continue
+                cancel_event = asyncio.Event()
+                agent.cancel_event = cancel_event
 
-                elif command == "/history":
-                    print(f"\n{Colors.BRIGHT_CYAN}Current session message count: {len(agent.messages)}{Colors.RESET}\n")
-                    continue
+                esc_listener_stop = threading.Event()
+                esc_cancelled = [False]
 
-                elif command == "/stats":
-                    print_stats(agent, session_start)
-                    continue
+                def esc_key_listener():
+                    if platform.system() == "Windows":
+                        try:
+                            import msvcrt
 
-                elif command == "/log" or command.startswith("/log "):
-                    # Parse /log command
-                    parts = user_input.split(maxsplit=1)
-                    if len(parts) == 1:
-                        # /log - show log directory
-                        show_log_directory(open_file_manager=True)
-                    else:
-                        # /log <filename> - read specific log file
-                        filename = parts[1].strip("\"'")
-                        read_log_file(filename)
-                    continue
+                            while not esc_listener_stop.is_set():
+                                if msvcrt.kbhit():
+                                    char = msvcrt.getch()
+                                    if char == b"\x1b":
+                                        print(f"\n{Colors.BRIGHT_YELLOW}⏹️  Esc pressed, cancelling...{Colors.RESET}")
+                                        esc_cancelled[0] = True
+                                        cancel_event.set()
+                                        break
+                                esc_listener_stop.wait(0.05)
+                        except Exception:
+                            pass
+                        return
 
-                else:
-                    print(f"{Colors.RED}❌ Unknown command: {user_input}{Colors.RESET}")
-                    print(f"{Colors.DIM}Type /help to see available commands{Colors.RESET}\n")
-                    continue
+                    try:
+                        import select
+                        import termios
+                        import tty
 
-            # Normal conversation - exit check
-            if user_input.lower() in ["exit", "quit", "q"]:
-                print(f"\n{Colors.BRIGHT_YELLOW}👋 Goodbye! Thanks for using Mini Agent{Colors.RESET}\n")
+                        fd = sys.stdin.fileno()
+                        old_settings = termios.tcgetattr(fd)
+
+                        try:
+                            tty.setcbreak(fd)
+                            while not esc_listener_stop.is_set():
+                                rlist, _, _ = select.select([sys.stdin], [], [], 0.05)
+                                if rlist:
+                                    char = sys.stdin.read(1)
+                                    if char == "\x1b":
+                                        print(f"\n{Colors.BRIGHT_YELLOW}⏹️  Esc pressed, cancelling...{Colors.RESET}")
+                                        esc_cancelled[0] = True
+                                        cancel_event.set()
+                                        break
+                        finally:
+                            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                    except Exception:
+                        pass
+
+                esc_thread = threading.Thread(target=esc_key_listener, daemon=True)
+                esc_thread.start()
+
+                try:
+                    agent_task = asyncio.create_task(agent.run())
+                    while not agent_task.done():
+                        if esc_cancelled[0]:
+                            cancel_event.set()
+                        await asyncio.sleep(0.1)
+                    _ = agent_task.result()
+
+                except asyncio.CancelledError:
+                    print(f"\n{Colors.BRIGHT_YELLOW}⚠️  Agent execution cancelled{Colors.RESET}")
+                finally:
+                    agent.cancel_event = None
+                    esc_listener_stop.set()
+                    esc_thread.join(timeout=0.2)
+
+                print(f"\n{Colors.DIM}{'─' * 60}{Colors.RESET}\n")
+
+            except KeyboardInterrupt:
+                print(f"\n\n{Colors.BRIGHT_YELLOW}👋 Interrupt signal detected, exiting...{Colors.RESET}\n")
                 print_stats(agent, session_start)
                 break
 
-            # Run Agent with Esc cancellation support
-            print(
-                f"\n{Colors.BRIGHT_BLUE}Agent{Colors.RESET} {Colors.DIM}›{Colors.RESET} {Colors.DIM}Thinking... (Esc to cancel){Colors.RESET}\n"
-            )
-            agent.add_user_message(user_input)
+            except Exception as e:
+                print(f"\n{Colors.RED}❌ Error: {e}{Colors.RESET}")
+                print(f"{Colors.DIM}{'─' * 60}{Colors.RESET}\n")
 
-            # Create cancellation event
-            cancel_event = asyncio.Event()
-            agent.cancel_event = cancel_event
-
-            # Esc key listener thread
-            esc_listener_stop = threading.Event()
-            esc_cancelled = [False]  # Mutable container for thread access
-
-            def esc_key_listener():
-                """Listen for Esc key in a separate thread."""
-                if platform.system() == "Windows":
-                    try:
-                        import msvcrt
-
-                        while not esc_listener_stop.is_set():
-                            if msvcrt.kbhit():
-                                char = msvcrt.getch()
-                                if char == b"\x1b":  # Esc
-                                    print(f"\n{Colors.BRIGHT_YELLOW}⏹️  Esc pressed, cancelling...{Colors.RESET}")
-                                    esc_cancelled[0] = True
-                                    cancel_event.set()
-                                    break
-                            esc_listener_stop.wait(0.05)
-                    except Exception:
-                        pass
-                    return
-
-                # Unix/macOS
-                try:
-                    import select
-                    import termios
-                    import tty
-
-                    fd = sys.stdin.fileno()
-                    old_settings = termios.tcgetattr(fd)
-
-                    try:
-                        tty.setcbreak(fd)
-                        while not esc_listener_stop.is_set():
-                            rlist, _, _ = select.select([sys.stdin], [], [], 0.05)
-                            if rlist:
-                                char = sys.stdin.read(1)
-                                if char == "\x1b":  # Esc
-                                    print(f"\n{Colors.BRIGHT_YELLOW}⏹️  Esc pressed, cancelling...{Colors.RESET}")
-                                    esc_cancelled[0] = True
-                                    cancel_event.set()
-                                    break
-                    finally:
-                        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-                except Exception:
-                    pass
-
-            # Start Esc listener thread
-            esc_thread = threading.Thread(target=esc_key_listener, daemon=True)
-            esc_thread.start()
-
-            # Run agent with periodic cancellation check
-            try:
-                agent_task = asyncio.create_task(agent.run())
-
-                # Poll for cancellation while agent runs
-                while not agent_task.done():
-                    if esc_cancelled[0]:
-                        cancel_event.set()
-                    await asyncio.sleep(0.1)
-
-                # Get result
-                _ = agent_task.result()
-
-            except asyncio.CancelledError:
-                print(f"\n{Colors.BRIGHT_YELLOW}⚠️  Agent execution cancelled{Colors.RESET}")
-            finally:
-                agent.cancel_event = None
-                esc_listener_stop.set()
-                esc_thread.join(timeout=0.2)
-
-            # Visual separation
-            print(f"\n{Colors.DIM}{'─' * 60}{Colors.RESET}\n")
-
-        except KeyboardInterrupt:
-            print(f"\n\n{Colors.BRIGHT_YELLOW}👋 Interrupt signal detected, exiting...{Colors.RESET}\n")
-            print_stats(agent, session_start)
-            break
-
-        except Exception as e:
-            print(f"\n{Colors.RED}❌ Error: {e}{Colors.RESET}")
-            print(f"{Colors.DIM}{'─' * 60}{Colors.RESET}\n")
-
-    # 11. Cleanup MCP connections
-    await _quiet_cleanup()
+    finally:
+        await _quiet_cleanup()
+        feishu_runner.stop()
 
 
 def main():

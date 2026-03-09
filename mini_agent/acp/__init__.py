@@ -32,10 +32,9 @@ from pydantic import field_validator
 from acp.schema import AgentCapabilities, Implementation, McpCapabilities
 
 from mini_agent.agent import Agent
-from mini_agent.cli import add_workspace_tools, initialize_base_tools
 from mini_agent.config import Config
 from mini_agent.llm import LLMClient
-from mini_agent.retry import RetryConfig as RetryConfigBase
+from mini_agent.runtime_factory import add_workspace_tools, build_runtime_bundle
 from mini_agent.schema import Message
 
 logger = logging.getLogger(__name__)
@@ -172,18 +171,10 @@ async def run_acp_server(config: Config | None = None) -> None:
     """Run Mini-Agent as an ACP-compatible stdio server."""
     config = config or Config.load()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-    base_tools, skill_loader = await initialize_base_tools(config)
-    prompt_path = Config.find_config_file(config.agent.system_prompt_path)
-    if prompt_path and prompt_path.exists():
-        system_prompt = prompt_path.read_text(encoding="utf-8")
-    else:
-        system_prompt = "You are a helpful AI assistant."
-    if skill_loader:
-        meta = skill_loader.get_skills_metadata_prompt()
-        if meta:
-            system_prompt = f"{system_prompt.rstrip()}\n\n{meta}"
-    rcfg = config.llm.retry
-    llm = LLMClient(api_key=config.llm.api_key, api_base=config.llm.api_base, model=config.llm.model, retry_config=RetryConfigBase(enabled=rcfg.enabled, max_retries=rcfg.max_retries, initial_delay=rcfg.initial_delay, max_delay=rcfg.max_delay, exponential_base=rcfg.exponential_base))
+    runtime = await build_runtime_bundle(config=config)
+    llm = runtime.llm_client
+    base_tools = runtime.base_tools
+    system_prompt = runtime.system_prompt
     reader, writer = await stdio_streams()
     AgentSideConnection(lambda conn: MiniMaxACPAgent(conn, config, llm, base_tools, system_prompt), writer, reader)
     logger.info("Mini-Agent ACP server running")

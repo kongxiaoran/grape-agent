@@ -58,3 +58,15 @@ tools:
     connect_timeout: 10.0    # Connection timeout in seconds (default: 10)
     execute_timeout: 60.0    # Tool execution timeout in seconds (default: 60)
     sse_read_timeout: 120.0  # SSE read timeout in seconds (default: 120)
+
+# ===== Embedded Feishu Bot (Optional) =====
+# When enabled, mini-agent process will auto-start a Feishu long-connection bot
+# in a background thread, and stop it automatically on process exit.
+feishu:
+  enabled: false
+  app_id: "cli_xxx"
+  app_secret: "YOUR_FEISHU_APP_SECRET"
+  domain: "feishu"  # feishu (CN) or lark (global)
+  group_require_mention: true
+  # Optional: custom workspace base for Feishu chat sessions
+  # workspace_base: "~/.mini-agent/feishu_workspaces"

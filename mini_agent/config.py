@@ -63,12 +63,24 @@ class ToolsConfig(BaseModel):
     mcp: MCPConfig = Field(default_factory=MCPConfig)
 
 
+class FeishuConfig(BaseModel):
+    """Embedded Feishu bot configuration."""
+
+    enabled: bool = False
+    app_id: str = ""
+    app_secret: str = ""
+    domain: str = "feishu"  # "feishu" or "lark"
+    group_require_mention: bool = True
+    workspace_base: str | None = None
+
+
 class Config(BaseModel):
     """Main configuration class"""
 
     llm: LLMConfig
     agent: AgentConfig
     tools: ToolsConfig
+    feishu: FeishuConfig = Field(default_factory=FeishuConfig)
 
     @classmethod
     def load(cls) -> "Config":
@@ -157,10 +169,22 @@ class Config(BaseModel):
             mcp=mcp_config,
         )
 
+        # Parse embedded Feishu bot configuration
+        feishu_data = data.get("feishu", {})
+        feishu_config = FeishuConfig(
+            enabled=feishu_data.get("enabled", False),
+            app_id=feishu_data.get("app_id", ""),
+            app_secret=feishu_data.get("app_secret", ""),
+            domain=feishu_data.get("domain", "feishu"),
+            group_require_mention=feishu_data.get("group_require_mention", True),
+            workspace_base=feishu_data.get("workspace_base"),
+        )
+
         return cls(
             llm=llm_config,
             agent=agent_config,
             tools=tools_config,
+            feishu=feishu_config,
         )
 
     @staticmethod
