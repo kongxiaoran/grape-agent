@@ -181,6 +181,16 @@ webterm_bridge:
   command_allowlist: ["grep", "tail", "cat", "less", "awk", "sed", "journalctl", "kubectl", "ps", "top", "netstat", "ss", "curl", "ls", "find"]
   command_denylist: ["rm", "reboot", "shutdown", "mkfs", "userdel", "iptables", "poweroff", "init"]
 
+# ===== MemOS Cloud Memory (Optional) =====
+# MemOS provides cloud-based long-term memory for AI agents.
+# Features: semantic search, multi-agent memory sharing, 72% token reduction.
+# Get your API key at: https://memos-dashboard.openmem.net
+# Install SDK: pip install MemoryOS -U
+memos:
+  enabled: false
+  api_key: ""  # Your MemOS API key (e.g., mpg-xxx)
+  # When enabled, replaces local note_tool with MemOS cloud memory
+
 # ===== Gateway Control Plane (Optional) =====
 # Local TCP JSON line protocol:
 #   one request per line: {"id":"1","method":"health","params":{},"auth":{"token":"...","client_id":"x","role":"operator"}}

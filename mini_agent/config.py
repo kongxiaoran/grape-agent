@@ -261,6 +261,13 @@ class WebtermBridgeConfig(BaseModel):
     )
 
 
+class MemOSConfig(BaseModel):
+    """MemOS cloud memory configuration."""
+
+    enabled: bool = False
+    api_key: str = ""
+
+
 class Config(BaseModel):
     """Main configuration class"""
 
@@ -275,6 +282,7 @@ class Config(BaseModel):
     gateway: GatewayConfig = Field(default_factory=GatewayConfig)
     cron: CronConfig = Field(default_factory=CronConfig)
     webterm_bridge: WebtermBridgeConfig = Field(default_factory=WebtermBridgeConfig)
+    memos: MemOSConfig = Field(default_factory=MemOSConfig)
 
     @classmethod
     def load(cls) -> "Config":
@@ -646,6 +654,13 @@ class Config(BaseModel):
         if webterm_config.enabled and not webterm_config.token:
             raise ValueError("webterm_bridge.token is required when webterm_bridge.enabled=true")
 
+        # Parse MemOS configuration
+        memos_data = data.get("memos", {})
+        memos_config = MemOSConfig(
+            enabled=(memos_data.get("enabled", False) if isinstance(memos_data, dict) else False),
+            api_key=(memos_data.get("api_key", "") if isinstance(memos_data, dict) else ""),
+        )
+
         return cls(
             llm=llm_config,
             agent=agent_config,
@@ -658,6 +673,7 @@ class Config(BaseModel):
             gateway=gateway_config,
             cron=cron_config,
             webterm_bridge=webterm_config,
+            memos=memos_config,
         )
 
     @staticmethod
