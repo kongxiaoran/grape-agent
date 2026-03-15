@@ -42,7 +42,7 @@ async def demo_direct_note_usage():
         print(f"  ✓ {result.content}")
 
         result = await record_tool.execute(
-            content="Project name: mini-agent, Tech: Python 3.12 + async",
+            content="Project name: grape-agent, Tech: Python 3.12 + async",
             category="project_info",
         )
         print(f"  ✓ {result.content}")
@@ -152,7 +152,7 @@ Guidelines:
         task1 = """
         Hello! Let me introduce myself:
         - I'm Alex, a senior Python developer
-        - I'm building an AI agent framework called "mini-agent"
+        - I'm building an AI agent framework called "grape-agent"
         - I use Python 3.12 with asyncio
         - I prefer type hints and comprehensive docstrings
         - My coding style: clean, functional, well-tested

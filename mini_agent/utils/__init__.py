@@ -1,4 +1,4 @@
-"""Utility modules for Mini-Agent."""
+"""Utility modules for Grape-Agent."""
 
 from .terminal_utils import (
     calculate_display_width,

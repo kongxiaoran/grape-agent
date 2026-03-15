@@ -1,8 +1,8 @@
-"""Mini Agent - Minimal single agent with basic tools and MCP support."""
+"""Grape Agent - Minimal single agent with basic tools and MCP support."""
 
 from .agent import Agent
 from .llm import LLMClient
-from .schema import FunctionCall, LLMProvider, LLMResponse, Message, ToolCall
+from .schema import FunctionCall, LLMProvider, LLMResponse, Message, ProviderEvent, ToolCall
 
 __version__ = "0.1.0"
 
@@ -14,4 +14,5 @@ __all__ = [
     "LLMResponse",
     "ToolCall",
     "FunctionCall",
+    "ProviderEvent",
 ]

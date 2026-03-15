@@ -27,7 +27,7 @@ async def demo_write_tool():
 
         tool = WriteTool()
         result = await tool.execute(
-            path=str(file_path), content="Hello, Mini Agent!\nThis is a test file."
+            path=str(file_path), content="Hello, Grape Agent!\nThis is a test file."
         )
 
         if result.success:
@@ -44,7 +44,7 @@ async def demo_read_tool():
     print("=" * 60)
 
     with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
-        f.write("Line 1: Hello\nLine 2: World\nLine 3: Mini Agent")
+        f.write("Line 1: Hello\nLine 2: World\nLine 3: Grape Agent")
         temp_path = f.name
 
     try:

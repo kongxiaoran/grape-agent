@@ -27,6 +27,7 @@ class OpenAIClient(LLMClientBase):
         api_key: str,
         api_base: str = "https://api.minimaxi.com/v1",
         model: str = "MiniMax-M2.5",
+        native_web_search: dict[str, Any] | None = None,
         retry_config: RetryConfig | None = None,
     ):
         """Initialize OpenAI client.
@@ -35,15 +36,35 @@ class OpenAIClient(LLMClientBase):
             api_key: API key for authentication
             api_base: Base URL for the API (default: MiniMax OpenAI endpoint)
             model: Model name to use (default: MiniMax-M2.5)
+            native_web_search: Model-native web search configuration
             retry_config: Optional retry configuration
         """
         super().__init__(api_key, api_base, model, retry_config)
+        self.native_web_search = native_web_search or {}
 
         # Initialize OpenAI client
         self.client = AsyncOpenAI(
             api_key=api_key,
             base_url=api_base,
         )
+
+    def _native_web_search_enabled_for_model(self) -> bool:
+        """Whether native web search should be injected for current model."""
+        if not self.native_web_search.get("enabled", False):
+            return False
+        patterns = self.native_web_search.get("model_patterns", [])
+        if not patterns:
+            return True
+        model_lower = self.model.lower()
+        return any(str(pattern).lower() in model_lower for pattern in patterns)
+
+    def _build_native_web_search_tool(self) -> dict[str, Any]:
+        """Build provider-specific native web search tool payload."""
+        tool = {"type": self.native_web_search.get("tool_type", "web_search")}
+        web_search_payload = self.native_web_search.get("web_search", {})
+        if isinstance(web_search_payload, dict) and web_search_payload:
+            tool["web_search"] = web_search_payload
+        return tool
 
     async def _make_api_request(
         self,
@@ -69,11 +90,35 @@ class OpenAIClient(LLMClientBase):
             "extra_body": {"reasoning_split": True},
         }
 
-        if tools:
-            params["tools"] = self._convert_tools(tools)
+        request_tools = self._convert_tools(tools) if tools else []
+        native_tool_added = False
+        if self._native_web_search_enabled_for_model():
+            native_tool = self._build_native_web_search_tool()
+            existing_types = {
+                tool.get("type")
+                for tool in request_tools
+                if isinstance(tool, dict) and tool.get("type")
+            }
+            if native_tool.get("type") not in existing_types:
+                request_tools.append(native_tool)
+                native_tool_added = True
+
+        if request_tools:
+            params["tools"] = request_tools
 
         # Use OpenAI SDK's chat.completions.create
-        response = await self.client.chat.completions.create(**params)
+        try:
+            response = await self.client.chat.completions.create(**params)
+        except Exception as exc:
+            if not native_tool_added:
+                raise
+            logger.warning("Native web_search tool failed, retrying without it: %s", exc)
+            fallback_tools = self._convert_tools(tools) if tools else []
+            if fallback_tools:
+                params["tools"] = fallback_tools
+            else:
+                params.pop("tools", None)
+            response = await self.client.chat.completions.create(**params)
         # Return full response to access usage info
         return response
 
@@ -90,7 +135,7 @@ class OpenAIClient(LLMClientBase):
         for tool in tools:
             if isinstance(tool, dict):
                 # If already a dict, check if it's in OpenAI format
-                if "type" in tool and tool["type"] == "function":
+                if "type" in tool:
                     result.append(tool)
                 else:
                     # Assume it's in Anthropic format, convert to OpenAI
@@ -254,6 +299,7 @@ class OpenAIClient(LLMClientBase):
             content=text_content,
             thinking=thinking_content if thinking_content else None,
             tool_calls=tool_calls if tool_calls else None,
+            provider_events=None,
             finish_reason="stop",  # OpenAI doesn't provide finish_reason in the message
             usage=usage,
         )

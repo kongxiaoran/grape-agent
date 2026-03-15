@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #F2F2F2; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #1C2833;
+  padding: 15pt 40pt;
+}
+h1 {
+  color: #FFFFFF;
+  font-size: 28pt;
+  margin: 0;
+}
+.content {
+  padding: 20pt 40pt 40pt 40pt;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15pt;
+}
+.timeline {
+  display: flex;
+  gap: 15pt;
+}
+.phase {
+  flex: 1;
+  background: #FFFFFF;
+  padding: 15pt;
+  border-radius: 8pt;
+  border-left: 4pt solid #F96D00;
+}
+h2 {
+  color: #F96D00;
+  font-size: 14pt;
+  margin: 0 0 8pt 0;
+}
+.phase-title {
+  color: #1C2833;
+  font-size: 13pt;
+  font-weight: bold;
+  margin: 0 0 6pt 0;
+}
+.phase-desc {
+  color: #2E4053;
+  font-size: 10pt;
+  margin: 0;
+  line-height: 1.3;
+}
+.budget-section {
+  background: #FFFFFF;
+  padding: 18pt;
+  border-radius: 8pt;
+}
+.budget-title-box {
+  border-left: 4pt solid #F96D00;
+  padding-left: 12pt;
+  margin-bottom: 12pt;
+}
+.budget-title {
+  color: #1C2833;
+  font-size: 16pt;
+  margin: 0;
+}
+.budget-grid {
+  display: flex;
+  gap: 25pt;
+}
+.budget-item {
+  flex: 1;
+}
+.budget-label {
+  color: #2E4053;
+  font-size: 12pt;
+  margin: 0 0 5pt 0;
+}
+.budget-amount {
+  color: #F96D00;
+  font-size: 20pt;
+  font-weight: bold;
+  margin: 0;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>执行计划与预算</h1>
+</div>
+<div class="content">
+  <div class="timeline">
+    <div class="phase">
+      <h2>Q1 (1-3月)</h2>
+      <p class="phase-title">平台搭建期</p>
+      <p class="phase-desc">完成系统开发和部署</p>
+    </div>
+    <div class="phase">
+      <h2>Q2 (4-6月)</h2>
+      <p class="phase-title">试点运营期</p>
+      <p class="phase-desc">3-5家门店试点测试</p>
+    </div>
+    <div class="phase">
+      <h2>Q3 (7-9月)</h2>
+      <p class="phase-title">全面推广期</p>
+      <p class="phase-desc">所有门店接入系统</p>
+    </div>
+    <div class="phase">
+      <h2>Q4 (10-12月)</h2>
+      <p class="phase-title">优化提升期</p>
+      <p class="phase-desc">数据优化与年终大促</p>
+    </div>
+  </div>
+  <div class="budget-section">
+    <div class="budget-title-box">
+      <h2 class="budget-title">预算分配</h2>
+    </div>
+    <div class="budget-grid">
+      <div class="budget-item">
+        <p class="budget-label">技术开发</p>
+        <p class="budget-amount">¥200万</p>
+      </div>
+      <div class="budget-item">
+        <p class="budget-label">营销推广</p>
+        <p class="budget-amount">¥350万</p>
+      </div>
+      <div class="budget-item">
+        <p class="budget-label">人员培训</p>
+        <p class="budget-amount">¥80万</p>
+      </div>
+      <div class="budget-item">
+        <p class="budget-label">运营维护</p>
+        <p class="budget-amount">¥120万</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

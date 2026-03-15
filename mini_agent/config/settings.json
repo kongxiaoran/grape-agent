@@ -1,0 +1,154 @@
+{
+  "api_key": "YOUR_API_KEY_HERE",
+  "api_base": "https://api.minimax.io",
+  "model": "MiniMax-M2.5",
+  "provider": "anthropic",
+  "native_web_search": {
+    "enabled": true,
+    "model_patterns": ["glm-5"],
+    "tool_type": "web_search",
+    "web_search": {
+      "enable": "True"
+    }
+  },
+  "retry": {
+    "enabled": true,
+    "max_retries": 3,
+    "initial_delay": 1.0,
+    "max_delay": 60.0,
+    "exponential_base": 2.0
+  },
+  "max_steps": 100,
+  "workspace_dir": "./workspace",
+  "system_prompt_path": "system_prompt.md",
+  "agents": {
+    "default_agent_id": "main",
+    "profiles": {
+      "main": {}
+    }
+  },
+  "routing": {
+    "default_agent_id": "main",
+    "rules": []
+  },
+  "subagents": {
+    "enabled": true,
+    "max_depth": 2,
+    "deny_tools_leaf": [
+      "sessions_spawn",
+      "sessions_list",
+      "sessions_history",
+      "sessions_send"
+    ]
+  },
+  "ui": {
+    "style": "claude",
+    "show_thinking": true,
+    "show_tool_args": false,
+    "show_timing": false,
+    "show_steps": false,
+    "render_markdown": true
+  },
+  "tools": {
+    "enable_file_tools": true,
+    "enable_bash": true,
+    "enable_note": true,
+    "enable_skills": true,
+    "skills_dir": "./skills",
+    "enable_mcp": true,
+    "mcp_config_path": "mcp.json",
+    "mcp": {
+      "connect_timeout": 10.0,
+      "execute_timeout": 60.0,
+      "sse_read_timeout": 120.0
+    }
+  },
+  "channels": {
+    "feishu": {
+      "enabled": false,
+      "default_account": "main",
+      "accounts": {
+        "main": {
+          "app_id": "cli_xxx",
+          "app_secret": "YOUR_FEISHU_APP_SECRET",
+          "domain": "feishu"
+        }
+      },
+      "render_mode": "auto",
+      "policy": {
+        "require_mention": true,
+        "reply_in_thread": true,
+        "group_session_scope": "group"
+      },
+      "streaming": {
+        "enabled": false,
+        "chunk_size": 600,
+        "interval_ms": 120,
+        "reply_all_chunks": false,
+        "progress_ping_sec": 0,
+        "progress_card_enabled": true,
+        "progress_card_start_sec": 5,
+        "progress_card_update_sec": 3,
+        "progress_card_tail_lines": 5
+      }
+    }
+  },
+  "cron": {
+    "enabled": false,
+    "store_path": "~/.grape/cron/jobs.json",
+    "poll_interval_sec": 5.0,
+    "max_concurrency": 2,
+    "default_timeout_sec": 300
+  },
+  "webterm_bridge": {
+    "enabled": false,
+    "host": "127.0.0.1",
+    "port": 8766,
+    "token": "CHANGE_ME_WEBTERM_BRIDGE_TOKEN",
+    "gateway_client_id": "webterm-bridge",
+    "parent_session_key": "agent:main:terminal:main",
+    "default_agent_id": "main",
+    "max_buffer_lines": 400,
+    "max_context_chars": 12000,
+    "command_wrap_markers": true,
+    "command_require_confirm": true,
+    "auto_execute_low_risk": false,
+    "profile_path": "~/.grape/webterm_profiles.yaml",
+    "command_allowlist": [
+      "grep",
+      "tail",
+      "cat",
+      "less",
+      "awk",
+      "sed",
+      "journalctl",
+      "kubectl",
+      "ps",
+      "top",
+      "netstat",
+      "ss",
+      "curl",
+      "ls",
+      "find"
+    ],
+    "command_denylist": [
+      "rm",
+      "reboot",
+      "shutdown",
+      "mkfs",
+      "userdel",
+      "iptables",
+      "poweroff",
+      "init"
+    ]
+  },
+  "gateway": {
+    "enabled": false,
+    "host": "127.0.0.1",
+    "port": 8765,
+    "auth": {
+      "enabled": true,
+      "token": "CHANGE_ME_TO_A_STRONG_TOKEN"
+    }
+  }
+}

@@ -24,7 +24,7 @@ from mini_agent.tools.note_tool import RecallNoteTool, SessionNoteTool
 async def demo_full_agent():
     """Demo: Full-featured agent with all capabilities."""
     print("\n" + "=" * 60)
-    print("Full Mini Agent - All Features Enabled")
+    print("Full Grape Agent - All Features Enabled")
     print("=" * 60)
 
     # Load configuration
@@ -186,10 +186,10 @@ You have record_note and recall_notes tools. Use them to:
 async def demo_interactive_mode():
     """Demo: Interactive conversation with agent."""
     print("\n" + "=" * 60)
-    print("Interactive Mini Agent")
+    print("Interactive Grape Agent")
     print("=" * 60)
     print("\nThis demo shows multi-turn conversation.")
-    print("(In production, use `mini-agent` for full interactive mode)")
+    print("(In production, use `grape-agent` for full interactive mode)")
 
     # Load config
     config_path = Path("mini_agent/config/config.yaml")
@@ -269,7 +269,7 @@ async def main():
     print("All demos completed! ✅")
     print("=" * 60)
     print("\n💡 Next step: Try the interactive mode with:")
-    print("   mini-agent\n")
+    print("   grape-agent\n")
 
 
 if __name__ == "__main__":

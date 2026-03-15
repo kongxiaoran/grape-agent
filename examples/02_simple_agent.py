@@ -76,7 +76,7 @@ async def demo_file_creation():
         Create a Python file named 'hello.py' that:
         1. Defines a function called greet(name)
         2. The function prints "Hello, {name}!"
-        3. Calls the function with name="Mini Agent"
+        3. Calls the function with name="Grape Agent"
         """
 
         print("📝 Task:")

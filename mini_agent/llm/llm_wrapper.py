@@ -5,6 +5,7 @@ This module provides a unified interface for different LLM providers
 """
 
 import logging
+from typing import Any
 
 from ..retry import RetryConfig
 from ..schema import LLMProvider, LLMResponse, Message
@@ -39,6 +40,7 @@ class LLMClient:
         provider: LLMProvider = LLMProvider.ANTHROPIC,
         api_base: str = "https://api.minimaxi.com",
         model: str = "MiniMax-M2.5",
+        native_web_search: dict[str, Any] | None = None,
         retry_config: RetryConfig | None = None,
     ):
         """Initialize LLM client with specified provider.
@@ -50,6 +52,7 @@ class LLMClient:
                      For MiniMax API, suffix is auto-appended based on provider.
                      For third-party APIs (e.g., https://api.siliconflow.cn/v1), used as-is.
             model: Model name to use
+            native_web_search: Model-native web search configuration (OpenAI protocol)
             retry_config: Optional retry configuration
         """
         self.provider = provider
@@ -86,6 +89,7 @@ class LLMClient:
                 api_key=api_key,
                 api_base=full_api_base,
                 model=model,
+                native_web_search=native_web_search,
                 retry_config=retry_config,
             )
         elif provider == LLMProvider.OPENAI:
@@ -93,6 +97,7 @@ class LLMClient:
                 api_key=api_key,
                 api_base=full_api_base,
                 model=model,
+                native_web_search=native_web_search,
                 retry_config=retry_config,
             )
         else:

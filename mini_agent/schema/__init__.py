@@ -1,10 +1,11 @@
-"""Schema definitions for Mini-Agent."""
+"""Schema definitions for Grape-Agent."""
 
 from .schema import (
     FunctionCall,
     LLMProvider,
     LLMResponse,
     Message,
+    ProviderEvent,
     TokenUsage,
     ToolCall,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "LLMProvider",
     "LLMResponse",
     "Message",
+    "ProviderEvent",
     "TokenUsage",
     "ToolCall",
 ]

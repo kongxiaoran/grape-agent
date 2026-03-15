@@ -96,7 +96,7 @@ async def test_basic_agent_usage():
 
         # Task: Create a Python file with hello world
         task = """
-        Create a Python file named hello.py in the workspace that prints "Hello, Mini Agent!".
+        Create a Python file named hello.py in the workspace that prints "Hello, Grape Agent!".
         Then execute it to verify it works.
         """
 
@@ -180,7 +180,7 @@ You have record_note and recall_notes tools:
         task1 = """
         Please remember these details about me:
         - Name: Alex
-        - Project: mini-agent
+        - Project: grape-agent
         - Tech stack: Python 3.12, async/await
         - Preference: concise code style
         

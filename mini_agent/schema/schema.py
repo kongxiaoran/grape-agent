@@ -43,6 +43,17 @@ class TokenUsage(BaseModel):
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
+    cache_read_tokens: int = 0
+    cache_creation_tokens: int = 0
+
+
+class ProviderEvent(BaseModel):
+    """Provider-native event emitted during one model response."""
+
+    source: str
+    event_type: str
+    name: str | None = None
+    payload: Any = None
 
 
 class LLMResponse(BaseModel):
@@ -51,5 +62,6 @@ class LLMResponse(BaseModel):
     content: str
     thinking: str | None = None  # Extended thinking blocks
     tool_calls: list[ToolCall] | None = None
+    provider_events: list[ProviderEvent] | None = None
     finish_reason: str
     usage: TokenUsage | None = None  # Token usage from API response

@@ -1,8 +1,8 @@
-# Mini Agent Configuration Example
+# Grape Agent Configuration Example
 # 
 # Configuration File Locations (in priority order):
 # 1) mini_agent/config/config.yaml - Development mode (current directory)
-# 2) ~/.mini-agent/config/config.yaml - User config directory
+# 2) ~/.grape-agent/config/config.yaml - User config directory
 # 3) <package>/mini_agent/config/config.yaml - Package installation directory
 #
 # To use this config:
@@ -25,6 +25,19 @@ model: "MiniMax-M2.5"
 # For third-party APIs (e.g., https://api.siliconflow.cn/v1), api_base is used as-is.
 provider: "anthropic"  # Default: anthropic
 
+# Model-native web search (OpenAI protocol models)
+# For models like GLM-5 that support native search, this lets model call built-in search
+# directly instead of relying on MCP web search tools.
+# Note:
+# - OpenAI-compatible endpoint: injects {"type":"web_search","web_search":...}
+# - Anthropic-compatible endpoint: auto-maps to server tool "web_search_20250305"
+native_web_search:
+  enabled: true
+  model_patterns: ["glm-5"]
+  tool_type: "web_search"
+  web_search:
+    enable: "True"
+
 # ===== Retry Configuration =====
 retry:
   enabled: true           # Enable retry mechanism
@@ -37,6 +50,51 @@ retry:
 max_steps: 100  # Maximum execution steps
 workspace_dir: "./workspace"  # Working directory
 system_prompt_path: "system_prompt.md"  # System prompt file (same config directory)
+
+# ===== Multi-Agent Profiles (M3) =====
+agents:
+  default_agent_id: "main"
+  profiles:
+    main:
+      # Optional overrides; omitted means use top-level model/system_prompt/workspace.
+      # workspace: "./workspace-main"
+      # model: "GLM-5"
+      # system_prompt_path: "system_prompt.md"
+    # reviewer:
+    #   workspace: "./workspace-reviewer"
+    #   model: "GLM-5"
+    #   system_prompt_path: "system_prompt_reviewer.md"
+
+# ===== Routing Rules (M3) =====
+routing:
+  default_agent_id: "main"
+  rules:
+    # First-match wins (ordered)
+    # - channel: "feishu"
+    #   chat_type: "group"     # direct|group
+    #   chat_id: "oc_xxx"
+    #   account_id: "cli_xxx"
+    #   agent_id: "reviewer"
+
+# ===== Subagent Policy (M4) =====
+subagents:
+  enabled: true
+  max_depth: 2
+  deny_tools_leaf:
+    - "sessions_spawn"
+    - "sessions_list"
+    - "sessions_history"
+    - "sessions_send"
+
+# ===== Terminal UI =====
+# style: legacy | compact | claude
+ui:
+  style: "claude"
+  show_thinking: true
+  show_tool_args: false
+  show_timing: false
+  show_steps: false
+  render_markdown: true
 
 # ===== Tools Configuration =====
 tools:
@@ -59,14 +117,77 @@ tools:
     execute_timeout: 60.0    # Tool execution timeout in seconds (default: 60)
     sse_read_timeout: 120.0  # SSE read timeout in seconds (default: 120)
 
-# ===== Embedded Feishu Bot (Optional) =====
-# When enabled, mini-agent process will auto-start a Feishu long-connection bot
-# in a background thread, and stop it automatically on process exit.
-feishu:
+# ===== Channel Plugins (M2) =====
+# Channel runtime will auto-start enabled plugins and stop them on process exit.
+channels:
+  feishu:
+    enabled: false
+    default_account: "main"
+    accounts:
+      main:
+        app_id: "cli_xxx"
+        app_secret: "YOUR_FEISHU_APP_SECRET"
+        domain: "feishu"  # feishu (CN) or lark (global)
+      # ops:
+      #   app_id: "cli_ops_xxx"
+      #   app_secret: "YOUR_FEISHU_APP_SECRET_OPS"
+      #   domain: "lark"
+    render_mode: "auto"  # auto|raw|card
+    policy:
+      require_mention: true         # for group chats
+      reply_in_thread: true         # reply in topic/thread when possible
+      group_session_scope: "group"  # group|group_sender|topic
+    streaming:
+      enabled: false          # progressive chunk streaming
+      chunk_size: 600         # 100-3000 chars per chunk
+      interval_ms: 120        # delay between chunk sends
+      reply_all_chunks: false # true: all chunks via reply API
+      progress_ping_sec: 0    # default off: avoid repeated "still processing" messages
+      progress_card_enabled: true    # default on: one updatable progress card
+      progress_card_start_sec: 5     # create card only when execution exceeds this duration
+      progress_card_update_sec: 3    # refresh card interval
+      progress_card_tail_lines: 5    # only keep latest N progress lines
+    # Optional: custom workspace base for Feishu chat sessions
+    # workspace_base: "~/.grape-agent/feishu_workspaces"
+
+# ===== Cron Scheduler (M5) =====
+cron:
   enabled: false
-  app_id: "cli_xxx"
-  app_secret: "YOUR_FEISHU_APP_SECRET"
-  domain: "feishu"  # feishu (CN) or lark (global)
-  group_require_mention: true
-  # Optional: custom workspace base for Feishu chat sessions
-  # workspace_base: "~/.mini-agent/feishu_workspaces"
+  store_path: "~/.grape-agent/cron/jobs.json"
+  poll_interval_sec: 5.0
+  max_concurrency: 2
+  default_timeout_sec: 300
+
+# ===== Webterm Local Bridge (Chrome 插件适配) =====
+webterm_bridge:
+  enabled: false
+  host: "127.0.0.1"
+  port: 8766
+  token: "CHANGE_ME_WEBTERM_BRIDGE_TOKEN"
+  # Optional override; default follows gateway.host/gateway.port/gateway.auth.token
+  # gateway_host: "127.0.0.1"
+  # gateway_port: 8765
+  # gateway_token: "grape-agent-gateway-dev-token"
+  gateway_client_id: "webterm-bridge"
+  # Parent session for creating webterm child sessions via sessions.spawn
+  parent_session_key: "agent:main:terminal:main"
+  default_agent_id: "main"
+  max_buffer_lines: 400
+  max_context_chars: 12000
+  command_wrap_markers: true
+  command_require_confirm: true
+  auto_execute_low_risk: false
+  profile_path: "~/.grape-agent/webterm_profiles.yaml"
+  command_allowlist: ["grep", "tail", "cat", "less", "awk", "sed", "journalctl", "kubectl", "ps", "top", "netstat", "ss", "curl", "ls", "find"]
+  command_denylist: ["rm", "reboot", "shutdown", "mkfs", "userdel", "iptables", "poweroff", "init"]
+
+# ===== Gateway Control Plane (Optional) =====
+# Local TCP JSON line protocol:
+#   one request per line: {"id":"1","method":"health","params":{},"auth":{"token":"...","client_id":"x","role":"operator"}}
+gateway:
+  enabled: false
+  host: "127.0.0.1"
+  port: 8765
+  auth:
+    enabled: true
+    token: "CHANGE_ME_TO_A_STRONG_TOKEN"

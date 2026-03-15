@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
@@ -13,9 +14,10 @@ from mini_agent.schema import LLMProvider
 from mini_agent.tools.base import Tool
 from mini_agent.tools.bash_tool import BashKillTool, BashOutputTool, BashTool
 from mini_agent.tools.file_tools import EditTool, ReadTool, WriteTool
-from mini_agent.tools.mcp_loader import load_mcp_tools_async, set_mcp_timeout_config
+from mini_agent.tools.mcp_loader import load_mcp_tools_async, set_mcp_output_quiet, set_mcp_timeout_config
 from mini_agent.tools.note_tool import SessionNoteTool
 from mini_agent.tools.skill_tool import create_skill_tools
+from mini_agent.tools.tool_policy import filter_tools_by_name
 
 
 LogFn = Callable[[str], None] | None
@@ -55,6 +57,7 @@ def create_llm_client(config: Config, on_retry: Callable[[Exception, int], None]
         provider=provider,
         api_base=config.llm.api_base,
         model=config.llm.model,
+        native_web_search=config.llm.native_web_search.model_dump(mode="python"),
         retry_config=retry_config if retry_cfg.enabled else None,
     )
 
@@ -66,15 +69,27 @@ def create_llm_client(config: Config, on_retry: Callable[[Exception, int], None]
 
 def apply_runtime_identity_prompt(prompt: str, config: Config) -> str:
     """Inject runtime model identity and disclosure guardrails."""
+    now_local = datetime.now().astimezone()
+    runtime_date = now_local.strftime("%Y-%m-%d")
+    runtime_datetime = now_local.strftime("%Y-%m-%d %H:%M:%S %Z")
     rendered = prompt.replace("{MODEL_NAME}", config.llm.model)
     rendered = rendered.replace("{MODEL_PROVIDER}", config.llm.provider)
     rendered += (
         "\n\n## Runtime Identity Guardrails\n"
-        "- If asked who you are, answer: Mini-Agent, an open-source assistant in this project.\n"
+        "- If asked who you are, answer: Grape-Agent.\n"
+        "- If asked who developed/created you, answer: Developer: Kongxr.\n"
         f"- If asked which model you are using, answer with the current configured model: {config.llm.model} "
         f"(provider: {config.llm.provider}).\n"
+        f"- Runtime local datetime (startup snapshot): {runtime_datetime}.\n"
+        f"- For 'today/now/current date' questions, use local date {runtime_date} and answer with an exact date.\n"
         "- Keep this answer factual and do not invent model details.\n"
+        "- Do not claim identity or ownership by any other project or organization.\n"
     )
+    if config.llm.native_web_search.enabled:
+        rendered += (
+            "- For internet lookups, prefer model-native web search when available.\n"
+            "- Do not use bash curl/wget as the primary search path unless user explicitly requests shell-level diagnostics.\n"
+        )
     return rendered
 
 
@@ -86,7 +101,7 @@ def load_system_prompt(config: Config, log: LogFn = None) -> str:
         _emit(log, f"loaded system prompt (from: {system_prompt_path})")
     else:
         prompt = (
-            "You are Mini-Agent, an open-source AI assistant focused on practical task execution. "
+            "You are Grape-Agent, an open-source AI assistant focused on practical task execution. "
             "If asked which model you use, answer truthfully with the runtime configuration."
         )
         _emit(log, "system prompt not found, using default")
@@ -124,7 +139,7 @@ async def initialize_base_tools(config: Config, log: LogFn = None) -> tuple[list
                         skills_dir = str(path.resolve())
                         break
 
-            skill_tools, skill_loader = create_skill_tools(skills_dir)
+            skill_tools, skill_loader = create_skill_tools(skills_dir, verbose=config.ui.style != "claude")
             if skill_tools:
                 tools.extend(skill_tools)
                 _emit(log, "loaded Skill tool (get_skill)")
@@ -136,6 +151,7 @@ async def initialize_base_tools(config: Config, log: LogFn = None) -> tuple[list
     if config.tools.enable_mcp:
         _emit(log, "loading MCP tools...")
         try:
+            set_mcp_output_quiet(getattr(config, "ui", None) is not None and config.ui.style == "claude")
             mcp_cfg = config.tools.mcp
             set_mcp_timeout_config(
                 connect_timeout=mcp_cfg.connect_timeout,
@@ -162,6 +178,8 @@ async def initialize_base_tools(config: Config, log: LogFn = None) -> tuple[list
                 _emit(log, f"MCP config file not found: {config.tools.mcp_config_path}")
         except Exception as exc:
             _emit(log, f"failed to load MCP tools: {exc}")
+        finally:
+            set_mcp_output_quiet(False)
 
     return tools, skill_loader
 
@@ -194,6 +212,33 @@ def add_workspace_tools(
             from mini_agent.tools.note_tool import RecallNoteTool
 
             tools.append(RecallNoteTool(memory_file=memory_file))
+
+
+def build_session_tools(
+    *,
+    base_tools: list[Tool],
+    config: Config,
+    workspace_dir: Path,
+    include_recall_notes: bool = False,
+    extra_tools: list[Tool] | None = None,
+    deny_tool_names: set[str] | None = None,
+    log: LogFn = None,
+) -> list[Tool]:
+    """Build a session-scoped tool list with optional policy filtering."""
+    tools = list(base_tools)
+    add_workspace_tools(
+        tools=tools,
+        config=config,
+        workspace_dir=workspace_dir,
+        include_recall_notes=include_recall_notes,
+    )
+    if extra_tools:
+        tools.extend(extra_tools)
+    if deny_tool_names:
+        tools, removed = filter_tools_by_name(tools, deny_tool_names)
+        if removed:
+            _emit(log, f"subagent policy denied tools: {', '.join(sorted(set(removed)))}")
+    return tools
 
 
 async def build_runtime_bundle(

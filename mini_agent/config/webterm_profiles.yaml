@@ -1,0 +1,33 @@
+profiles:
+  - id: "default-linux"
+    match:
+      host: "*"
+      scope: "*"
+      user: "*"
+    summary: "默认 Linux 排障画像"
+    log_patterns:
+      - "*.log"
+      - "*.log.YYYY-MM-DD"
+    command_hints:
+      - "pwd && ls -lah"
+      - "date"
+
+  - id: "neutral-crowd-log-center"
+    match:
+      host: "example-bastion.local"
+      scope: "example-log-center"
+      user: "example-user"
+    summary: "示例业务日志中心画像（公开模板）"
+    log_paths:
+      - "/app/backup/applog/example-service/"
+      - "/app/backup/applog/example-service/app.log"
+    log_patterns:
+      - "app.log"
+      - "app.log.*"
+      - "error.log*"
+    command_hints:
+      - "ls -lah /app/backup/applog/example-service/"
+      - "tail -n 200 /app/backup/applog/example-service/app.log"
+      - "grep -nE 'ERROR|Exception|Traceback' /app/backup/applog/example-service/app.log | tail -n 200"
+    notes: |
+      先确认日期与时区，再按时间窗口检索错误关键字。

@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .schema import Message, ToolCall
+from .schema import Message, ProviderEvent, ToolCall
 
 
 class AgentLogger:
@@ -19,10 +19,10 @@ class AgentLogger:
     def __init__(self):
         """Initialize logger
 
-        Logs are stored in ~/.mini-agent/log/ directory
+        Logs are stored in ~/.grape-agent/log/ directory
         """
-        # Use ~/.mini-agent/log/ directory for logs
-        self.log_dir = Path.home() / ".mini-agent" / "log"
+        # Use ~/.grape-agent/log/ directory for logs
+        self.log_dir = Path.home() / ".grape-agent" / "log"
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = None
         self.log_index = 0
@@ -87,6 +87,7 @@ class AgentLogger:
         content: str,
         thinking: str | None = None,
         tool_calls: list[ToolCall] | None = None,
+        provider_events: list[ProviderEvent] | None = None,
         finish_reason: str | None = None,
     ):
         """Log LLM response
@@ -95,6 +96,7 @@ class AgentLogger:
             content: Response content
             thinking: Thinking content (optional)
             tool_calls: Tool call list (optional)
+            provider_events: Provider-native events (optional)
             finish_reason: Finish reason (optional)
         """
         self.log_index += 1
@@ -109,6 +111,9 @@ class AgentLogger:
 
         if tool_calls:
             response_data["tool_calls"] = [tc.model_dump() for tc in tool_calls]
+
+        if provider_events:
+            response_data["provider_events"] = [evt.model_dump() for evt in provider_events]
 
         if finish_reason:
             response_data["finish_reason"] = finish_reason

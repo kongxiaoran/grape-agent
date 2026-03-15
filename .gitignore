@@ -1,3 +1,6 @@
+# Node.js
+node_modules/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -56,7 +59,23 @@ mcp.json.bak
 
 docs/assets/backup/
 docs/assets/preview.html
+docs/a.txt
 
 CLAUDE.md
 
 .agent_memory.json
+
+# Local/private files not for open-source publishing
+mini_agent/config/config.local.yaml
+mini_agent/config/mcp.local.json
+mini_agent/config/webterm_profiles.local.yaml
+
+# Private deployment notes (environment-specific)
+docs/DEPLOY_ONEFILE_*_RUNBOOK_CN.md
+docs/private/
+
+# Local office/demo artifacts
+*.pptx
+任务完成总结.md
+公司报告生成演示.md
+项目分析总结.md

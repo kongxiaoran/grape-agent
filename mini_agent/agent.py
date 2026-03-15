@@ -1,7 +1,6 @@
 """Core Agent implementation."""
 
 import asyncio
-import json
 from pathlib import Path
 from time import perf_counter
 from typing import Optional
@@ -12,7 +11,7 @@ from .llm import LLMClient
 from .logger import AgentLogger
 from .schema import Message
 from .tools.base import Tool, ToolResult
-from .utils import calculate_display_width
+from .ui import ConsoleRenderer
 
 
 # ANSI color codes
@@ -53,12 +52,14 @@ class Agent:
         max_steps: int = 50,
         workspace_dir: str = "./workspace",
         token_limit: int = 80000,  # Summary triggered when tokens exceed this value
+        ui_renderer: ConsoleRenderer | None = None,
     ):
         self.llm = llm_client
         self.tools = {tool.name: tool for tool in tools}
         self.max_steps = max_steps
         self.token_limit = token_limit
         self.workspace_dir = Path(workspace_dir)
+        self.ui = ui_renderer or ConsoleRenderer()
         # Cancellation event for interrupting agent execution (set externally, e.g., by Esc key)
         self.cancel_event: Optional[asyncio.Event] = None
 
@@ -335,7 +336,6 @@ Requirements:
 
         # Start new run, initialize log file
         self.logger.start_new_run()
-        print(f"{Colors.DIM}📝 Log file: {self.logger.get_log_file_path()}{Colors.RESET}")
 
         step = 0
         run_start_time = perf_counter()
@@ -352,15 +352,7 @@ Requirements:
             # Check and summarize message history to prevent context overflow
             await self._summarize_messages()
 
-            # Step header with proper width calculation
-            BOX_WIDTH = 58
-            step_text = f"{Colors.BOLD}{Colors.BRIGHT_CYAN}💭 Step {step + 1}/{self.max_steps}{Colors.RESET}"
-            step_display_width = calculate_display_width(step_text)
-            padding = max(0, BOX_WIDTH - 1 - step_display_width)  # -1 for leading space
-
-            print(f"\n{Colors.DIM}╭{'─' * BOX_WIDTH}╮{Colors.RESET}")
-            print(f"{Colors.DIM}│{Colors.RESET} {step_text}{' ' * padding}{Colors.DIM}│{Colors.RESET}")
-            print(f"{Colors.DIM}╰{'─' * BOX_WIDTH}╯{Colors.RESET}")
+            self.ui.step_start(step + 1, self.max_steps)
 
             # Get tool list for LLM call
             tool_list = list(self.tools.values())
@@ -368,9 +360,12 @@ Requirements:
             # Log LLM request and call LLM with Tool objects directly
             self.logger.log_request(messages=self.messages, tools=tool_list)
 
+            self.ui.start_thinking_status()
             try:
                 response = await self.llm.generate(messages=self.messages, tools=tool_list)
+                self.ui.stop_thinking_status(response.usage)
             except Exception as e:
+                self.ui.stop_thinking_status(None)
                 # Check if it's a retry exhausted error
                 from .retry import RetryExhaustedError
 
@@ -391,6 +386,7 @@ Requirements:
                 content=response.content,
                 thinking=response.thinking,
                 tool_calls=response.tool_calls,
+                provider_events=response.provider_events,
                 finish_reason=response.finish_reason,
             )
 
@@ -404,20 +400,17 @@ Requirements:
             self.messages.append(assistant_msg)
 
             # Print thinking if present
-            if response.thinking:
-                print(f"\n{Colors.BOLD}{Colors.MAGENTA}🧠 Thinking:{Colors.RESET}")
-                print(f"{Colors.DIM}{response.thinking}{Colors.RESET}")
+            self.ui.thinking(response.thinking)
+            self.ui.provider_events(response.provider_events)
 
             # Print assistant response
-            if response.content:
-                print(f"\n{Colors.BOLD}{Colors.BRIGHT_BLUE}🤖 Assistant:{Colors.RESET}")
-                print(f"{response.content}")
+            self.ui.assistant_content(response.content)
 
             # Check if task is complete (no tool calls)
             if not response.tool_calls:
                 step_elapsed = perf_counter() - step_start_time
                 total_elapsed = perf_counter() - run_start_time
-                print(f"\n{Colors.DIM}⏱️  Step {step + 1} completed in {step_elapsed:.2f}s (total: {total_elapsed:.2f}s){Colors.RESET}")
+                self.ui.step_done(step + 1, step_elapsed, total_elapsed)
                 return response.content
 
             # Check for cancellation before executing tools
@@ -433,22 +426,7 @@ Requirements:
                 function_name = tool_call.function.name
                 arguments = tool_call.function.arguments
 
-                # Tool call header
-                print(f"\n{Colors.BRIGHT_YELLOW}🔧 Tool Call:{Colors.RESET} {Colors.BOLD}{Colors.CYAN}{function_name}{Colors.RESET}")
-
-                # Arguments (formatted display)
-                print(f"{Colors.DIM}   Arguments:{Colors.RESET}")
-                # Truncate each argument value to avoid overly long output
-                truncated_args = {}
-                for key, value in arguments.items():
-                    value_str = str(value)
-                    if len(value_str) > 200:
-                        truncated_args[key] = value_str[:200] + "..."
-                    else:
-                        truncated_args[key] = value
-                args_json = json.dumps(truncated_args, indent=2, ensure_ascii=False)
-                for line in args_json.split("\n"):
-                    print(f"   {Colors.DIM}{line}{Colors.RESET}")
+                self.ui.tool_call(function_name, arguments)
 
                 # Execute tool
                 if function_name not in self.tools:
@@ -482,14 +460,7 @@ Requirements:
                     result_error=result.error if not result.success else None,
                 )
 
-                # Print result
-                if result.success:
-                    result_text = result.content
-                    if len(result_text) > 300:
-                        result_text = result_text[:300] + f"{Colors.DIM}...{Colors.RESET}"
-                    print(f"{Colors.BRIGHT_GREEN}✓ Result:{Colors.RESET} {result_text}")
-                else:
-                    print(f"{Colors.BRIGHT_RED}✗ Error:{Colors.RESET} {Colors.RED}{result.error}{Colors.RESET}")
+                self.ui.tool_result(function_name, result)
 
                 # Add tool result message
                 tool_msg = Message(
@@ -509,7 +480,7 @@ Requirements:
 
             step_elapsed = perf_counter() - step_start_time
             total_elapsed = perf_counter() - run_start_time
-            print(f"\n{Colors.DIM}⏱️  Step {step + 1} completed in {step_elapsed:.2f}s (total: {total_elapsed:.2f}s){Colors.RESET}")
+            self.ui.step_done(step + 1, step_elapsed, total_elapsed)
 
             step += 1
 

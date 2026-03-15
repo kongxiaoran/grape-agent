@@ -6,7 +6,7 @@ from typing import Any
 import anthropic
 
 from ..retry import RetryConfig, async_retry
-from ..schema import FunctionCall, LLMResponse, Message, TokenUsage, ToolCall
+from ..schema import FunctionCall, LLMResponse, Message, ProviderEvent, TokenUsage, ToolCall
 from .base import LLMClientBase
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ class AnthropicClient(LLMClientBase):
         api_key: str,
         api_base: str = "https://api.minimaxi.com/anthropic",
         model: str = "MiniMax-M2.5",
+        native_web_search: dict[str, Any] | None = None,
         retry_config: RetryConfig | None = None,
     ):
         """Initialize Anthropic client.
@@ -34,9 +35,11 @@ class AnthropicClient(LLMClientBase):
             api_key: API key for authentication
             api_base: Base URL for the API (default: MiniMax Anthropic endpoint)
             model: Model name to use (default: MiniMax-M2.5)
+            native_web_search: Model-native web search configuration
             retry_config: Optional retry configuration
         """
         super().__init__(api_key, api_base, model, retry_config)
+        self.native_web_search = native_web_search or {}
 
         # Initialize Anthropic async client
         self.client = anthropic.AsyncAnthropic(
@@ -44,6 +47,39 @@ class AnthropicClient(LLMClientBase):
             api_key=api_key,
             default_headers={"Authorization": f"Bearer {api_key}"},
         )
+
+    def _native_web_search_enabled_for_model(self) -> bool:
+        """Whether native web search should be injected for current model."""
+        if not self.native_web_search.get("enabled", False):
+            return False
+        patterns = self.native_web_search.get("model_patterns", [])
+        if not patterns:
+            return True
+        model_lower = self.model.lower()
+        return any(str(pattern).lower() in model_lower for pattern in patterns)
+
+    def _build_native_web_search_tool(self) -> dict[str, Any]:
+        """Build provider-specific native web search tool payload."""
+        configured_type = str(self.native_web_search.get("tool_type", "web_search")).strip() or "web_search"
+        # Anthropic-compatible endpoints require server tool type/version, not OpenAI-style {"type":"web_search","web_search":...}
+        tool_type = "web_search_20250305" if configured_type == "web_search" else configured_type
+        tool = {
+            "type": tool_type,
+            "name": str(self.native_web_search.get("tool_name", "web_search")).strip() or "web_search",
+        }
+
+        # Map optional settings to Anthropic web search schema
+        web_search_payload = self.native_web_search.get("web_search", {})
+        if isinstance(web_search_payload, dict):
+            if "max_uses" in web_search_payload:
+                tool["max_uses"] = web_search_payload["max_uses"]
+            if "allowed_domains" in web_search_payload:
+                tool["allowed_domains"] = web_search_payload["allowed_domains"]
+            if "blocked_domains" in web_search_payload:
+                tool["blocked_domains"] = web_search_payload["blocked_domains"]
+            if "user_location" in web_search_payload:
+                tool["user_location"] = web_search_payload["user_location"]
+        return tool
 
     async def _make_api_request(
         self,
@@ -73,11 +109,35 @@ class AnthropicClient(LLMClientBase):
         if system_message:
             params["system"] = system_message
 
-        if tools:
-            params["tools"] = self._convert_tools(tools)
+        request_tools = self._convert_tools(tools) if tools else []
+        native_tool_added = False
+        if self._native_web_search_enabled_for_model():
+            native_tool = self._build_native_web_search_tool()
+            existing_types = {
+                tool.get("type")
+                for tool in request_tools
+                if isinstance(tool, dict) and tool.get("type")
+            }
+            if native_tool.get("type") not in existing_types:
+                request_tools.append(native_tool)
+                native_tool_added = True
+
+        if request_tools:
+            params["tools"] = request_tools
 
         # Use Anthropic SDK's async messages.create
-        response = await self.client.messages.create(**params)
+        try:
+            response = await self.client.messages.create(**params)
+        except Exception as exc:
+            if not native_tool_added:
+                raise
+            logger.warning("Native web_search tool failed, retrying without it: %s", exc)
+            fallback_tools = self._convert_tools(tools) if tools else []
+            if fallback_tools:
+                params["tools"] = fallback_tools
+            else:
+                params.pop("tools", None)
+            response = await self.client.messages.create(**params)
         return response
 
     def _convert_tools(self, tools: list[Any]) -> list[dict[str, Any]]:
@@ -212,6 +272,7 @@ class AnthropicClient(LLMClientBase):
         text_content = ""
         thinking_content = ""
         tool_calls = []
+        provider_events: list[ProviderEvent] = []
 
         for block in response.content:
             if block.type == "text":
@@ -230,26 +291,51 @@ class AnthropicClient(LLMClientBase):
                         ),
                     )
                 )
+            elif block.type == "server_tool_use":
+                provider_events.append(
+                    ProviderEvent(
+                        source="anthropic",
+                        event_type="server_tool_use",
+                        name=getattr(block, "name", None),
+                        payload={
+                            "id": getattr(block, "id", None),
+                            "input": getattr(block, "input", None),
+                        },
+                    )
+                )
+            elif block.type == "tool_result":
+                provider_events.append(
+                    ProviderEvent(
+                        source="anthropic",
+                        event_type="tool_result",
+                        payload={
+                            "tool_use_id": getattr(block, "tool_use_id", None),
+                            "content": getattr(block, "content", None),
+                        },
+                    )
+                )
 
-        # Extract token usage from response
-        # Anthropic usage includes: input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens
+        # Extract token usage from response.
+        # Keep total as actual prompt+completion tokens and expose cache stats separately.
         usage = None
         if hasattr(response, "usage") and response.usage:
             input_tokens = response.usage.input_tokens or 0
             output_tokens = response.usage.output_tokens or 0
             cache_read_tokens = getattr(response.usage, "cache_read_input_tokens", 0) or 0
             cache_creation_tokens = getattr(response.usage, "cache_creation_input_tokens", 0) or 0
-            total_input_tokens = input_tokens + cache_read_tokens + cache_creation_tokens
             usage = TokenUsage(
-                prompt_tokens=total_input_tokens,
+                prompt_tokens=input_tokens,
                 completion_tokens=output_tokens,
-                total_tokens=total_input_tokens + output_tokens,
+                total_tokens=input_tokens + output_tokens,
+                cache_read_tokens=cache_read_tokens,
+                cache_creation_tokens=cache_creation_tokens,
             )
 
         return LLMResponse(
             content=text_content,
             thinking=thinking_content if thinking_content else None,
             tool_calls=tool_calls if tool_calls else None,
+            provider_events=provider_events if provider_events else None,
             finish_reason=response.stop_reason or "stop",
             usage=usage,
         )

@@ -1,4 +1,4 @@
-"""ACP (Agent Client Protocol) bridge for Mini-Agent."""
+"""ACP (Agent Client Protocol) bridge for Grape-Agent."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ class MiniMaxACPAgent:
         return InitializeResponse(
             protocolVersion=PROTOCOL_VERSION,
             agentCapabilities=AgentCapabilities(loadSession=False),
-            agentInfo=Implementation(name="mini-agent", title="Mini-Agent", version="0.1.0"),
+            agentInfo=Implementation(name="grape-agent", title="Grape-Agent", version="0.1.0"),
         )
 
     async def newSession(self, params: NewSessionRequest) -> NewSessionResponse:
@@ -105,13 +105,8 @@ class MiniMaxACPAgent:
     async def prompt(self, params: PromptRequest) -> PromptResponse:
         state = self._sessions.get(params.sessionId)
         if not state:
-            # Auto-create session if not found (compatibility with clients that skip newSession)
-            logger.warning(f"Session '{params.sessionId}' not found, auto-creating new session")
-            new_session = await self.newSession(NewSessionRequest(cwd=None))
-            state = self._sessions.get(new_session.sessionId)
-            if not state:
-                logger.error("Failed to auto-create session")
-                return PromptResponse(stopReason="refusal")
+            logger.warning(f"Session '{params.sessionId}' not found")
+            return PromptResponse(stopReason="refusal")
         state.cancelled = False
         user_text = "\n".join(block.get("text", "") if isinstance(block, dict) else getattr(block, "text", "") for block in params.prompt)
         state.agent.messages.append(Message(role="user", content=user_text))
@@ -168,7 +163,7 @@ class MiniMaxACPAgent:
 
 
 async def run_acp_server(config: Config | None = None) -> None:
-    """Run Mini-Agent as an ACP-compatible stdio server."""
+    """Run Grape-Agent as an ACP-compatible stdio server."""
     config = config or Config.load()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
     runtime = await build_runtime_bundle(config=config)
@@ -177,7 +172,7 @@ async def run_acp_server(config: Config | None = None) -> None:
     system_prompt = runtime.system_prompt
     reader, writer = await stdio_streams()
     AgentSideConnection(lambda conn: MiniMaxACPAgent(conn, config, llm, base_tools, system_prompt), writer, reader)
-    logger.info("Mini-Agent ACP server running")
+    logger.info("Grape-Agent ACP server running")
     await asyncio.Event().wait()
 
 

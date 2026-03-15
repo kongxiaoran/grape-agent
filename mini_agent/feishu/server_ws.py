@@ -1,4 +1,4 @@
-"""Feishu long-connection server entrypoint for Mini-Agent."""
+"""Feishu long-connection server entrypoint for Grape-Agent."""
 
 from __future__ import annotations
 
@@ -12,7 +12,10 @@ from concurrent.futures import Future
 from pathlib import Path
 from typing import Any
 
+from mini_agent.agents.orchestrator import SessionOrchestrator
+from mini_agent.channels.logging import log_channel_event
 from mini_agent.config import Config
+from mini_agent.session_store import AgentSessionStore
 
 from .bridge import FeishuAgentBridge
 from .client import FeishuClient
@@ -28,16 +31,28 @@ class FeishuWebSocketServer:
         domain: str = "feishu",
         config_path: Path | None = None,
         workspace_base: Path | None = None,
+        account_id: str | None = None,
         group_require_mention: bool = True,
+        group_session_scope: str = "group",
+        reply_in_thread: bool = True,
         install_signal_handlers: bool = True,
+        session_store: AgentSessionStore | None = None,
+        subagent_orchestrator: SessionOrchestrator | None = None,
+        on_inbound_message=None,
     ):
         self.app_id = app_id
         self.app_secret = app_secret
         self.domain = domain
         self.config_path = config_path or Config.get_default_config_path()
         self.workspace_base = workspace_base
+        self.account_id = account_id or app_id
         self.group_require_mention = group_require_mention
+        self.group_session_scope = group_session_scope
+        self.reply_in_thread = reply_in_thread
         self.install_signal_handlers = install_signal_handlers
+        self.session_store = session_store
+        self.subagent_orchestrator = subagent_orchestrator
+        self.on_inbound_message = on_inbound_message
 
         self.feishu_client = FeishuClient(app_id=app_id, app_secret=app_secret, domain=domain)
         self.bridge: FeishuAgentBridge | None = None
@@ -83,18 +98,25 @@ class FeishuWebSocketServer:
             feishu_client=self.feishu_client,
             agent_config=cfg,
             workspace_root=self.workspace_base,
+            account_id=self.account_id,
             group_require_mention=self.group_require_mention,
+            group_session_scope=self.group_session_scope,
+            reply_in_thread=self.reply_in_thread,
+            session_store=self.session_store,
+            subagent_orchestrator=self.subagent_orchestrator,
+            on_inbound_message=self.on_inbound_message,
         )
         self._run_bridge_coro(self.bridge.initialize())
 
         bot_open_id, bot_name = self.feishu_client.get_bot_info_sync()
-
-        print("=" * 70)
-        print("Mini-Agent Feishu Long-Connection Server")
-        print(f"Config: {self.config_path}")
-        print(f"Domain: {self.domain}")
-        print(f"Bot: {bot_name or 'unknown'} ({bot_open_id or 'unknown'})")
-        print("=" * 70)
+        log_channel_event(
+            "feishu",
+            "ws.start.info",
+            config=str(self.config_path),
+            domain=self.domain,
+            account_id=self.account_id,
+            bot=f"{bot_name or 'unknown'} ({bot_open_id or 'unknown'})",
+        )
 
         lark = self.feishu_client.get_sdk()
         domain = lark.LARK_DOMAIN if self.domain == "lark" else lark.FEISHU_DOMAIN
@@ -114,9 +136,7 @@ class FeishuWebSocketServer:
 
         if self.install_signal_handlers:
             self._install_signal_handlers()
-
-        print("Connecting to Feishu WS long connection...")
-        print("Server is running. Press Ctrl+C to stop.")
+        log_channel_event("feishu", "ws.connect.begin", account_id=self.account_id)
 
         try:
             self._ws_client.start()
@@ -139,15 +159,14 @@ class FeishuWebSocketServer:
             try:
                 self._run_bridge_coro(self.bridge.shutdown())
             except Exception as exc:
-                print(f"Bridge shutdown warning: {exc}")
+                log_channel_event("feishu", "ws.stop.warning", error=f"bridge_shutdown: {type(exc).__name__}: {exc}")
 
         if self._bridge_loop is not None:
             self._bridge_loop.call_soon_threadsafe(self._bridge_loop.stop)
 
         if self._bridge_thread is not None:
             self._bridge_thread.join(timeout=2)
-
-        print("Feishu server stopped.")
+        log_channel_event("feishu", "ws.stop.ok", account_id=self.account_id)
 
     def _install_signal_handlers(self) -> None:
         def _on_signal(_sig, _frame) -> None:
@@ -182,7 +201,7 @@ class FeishuWebSocketServer:
 
         event_data = self._extract_event_data(event)
         if event_data is None:
-            print("[Feishu] event received but failed to parse payload")
+            log_channel_event("feishu", "ws.event.skipped", reason="parse_failed")
             return
 
         msg = event_data.get("message", {}) if isinstance(event_data, dict) else {}
@@ -190,34 +209,41 @@ class FeishuWebSocketServer:
             message_id = msg.get("message_id", "")
             chat_id = msg.get("chat_id", "")
             message_type = msg.get("message_type", "")
-            print(f"[Feishu] inbound event message_id={message_id} chat_id={chat_id} type={message_type}")
+            log_channel_event(
+                "feishu",
+                "ws.event.inbound",
+                account_id=self.account_id,
+                message_id=message_id,
+                chat_id=chat_id,
+                message_type=message_type,
+            )
 
         future: Future = asyncio.run_coroutine_threadsafe(self.bridge.handle_event(event_data), self._bridge_loop)
 
         def _done_callback(fut: Future) -> None:
             exc = fut.exception()
             if exc is not None:
-                print(f"[Feishu] Event handling failed: {exc}")
+                log_channel_event("feishu", "ws.event.error", error=f"{type(exc).__name__}: {exc}")
 
         future.add_done_callback(_done_callback)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run Mini-Agent Feishu long-connection server",
+        description="Run Grape-Agent Feishu long-connection server",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  mini-agent-feishu --app-id cli_xxx --app-secret xxx\n"
-            "  mini-agent-feishu --app-id cli_xxx --app-secret xxx --domain lark\n"
-            "  mini-agent-feishu --app-id cli_xxx --app-secret xxx --config mini_agent/config/config.yaml"
+            "  grape-agent-feishu --app-id cli_xxx --app-secret xxx\n"
+            "  grape-agent-feishu --app-id cli_xxx --app-secret xxx --domain lark\n"
+            "  grape-agent-feishu --app-id cli_xxx --app-secret xxx --config ~/.grape/settings.json"
         ),
     )
 
     parser.add_argument("--app-id", required=True, help="Feishu app id (cli_xxx)")
     parser.add_argument("--app-secret", required=True, help="Feishu app secret")
     parser.add_argument("--domain", default="feishu", choices=["feishu", "lark"], help="Platform domain")
-    parser.add_argument("--config", default=None, help="Mini-Agent config.yaml path")
+    parser.add_argument("--config", default=None, help="Grape settings.json path")
     parser.add_argument("--workspace-base", default=None, help="Per-chat workspace base directory")
     parser.add_argument(
         "--group-open",
@@ -248,7 +274,7 @@ def main() -> None:
     except KeyboardInterrupt:
         server.stop()
     except Exception as exc:
-        print(f"Fatal error: {exc}")
+        log_channel_event("feishu", "ws.fatal", error=f"{type(exc).__name__}: {exc}")
         server.stop()
         sys.exit(1)
 

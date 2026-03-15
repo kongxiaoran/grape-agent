@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Thank you for your interest in the Mini Agent project! We welcome contributions of all forms.
+Thank you for your interest in the Grape Agent project! We welcome contributions of all forms.
 
 ## How to Contribute
 
@@ -32,8 +32,8 @@ If you have an idea for a new feature, please create an Issue first to discuss i
 1. Fork this repository.
 2. Clone your fork:
    ```bash
-   git clone https://github.com/MiniMax-AI/Mini-Agent mini-agent
-   cd mini-agent
+   git clone https://github.com/MiniMax-AI/Grape-Agent grape-agent
+   cd grape-agent
    ```
 
 3. Create a new branch:

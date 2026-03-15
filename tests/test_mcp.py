@@ -22,6 +22,8 @@ from mini_agent.tools.mcp_loader import (
 def mcp_config():
     """Read MCP configuration."""
     mcp_config_path = Path("mini_agent/config/mcp.json")
+    if not mcp_config_path.exists():
+        mcp_config_path = Path("mini_agent/config/mcp-example.json")
     with open(mcp_config_path, encoding="utf-8") as f:
         return json.load(f)
 

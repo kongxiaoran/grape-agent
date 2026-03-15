@@ -114,6 +114,22 @@ class FeishuClient:
         receive_id_type: str = "chat_id",
     ) -> FeishuSendResult:
         """Send plain text message to chat or user."""
+        content = json.dumps({"text": text}, ensure_ascii=False)
+        return await self.send_message_content(
+            receive_id=receive_id,
+            msg_type="text",
+            content=content,
+            receive_id_type=receive_id_type,
+        )
+
+    async def send_message_content(
+        self,
+        receive_id: str,
+        msg_type: str,
+        content: str,
+        receive_id_type: str = "chat_id",
+    ) -> FeishuSendResult:
+        """Send raw message content with explicit msg_type."""
         self._load_sdk()
         client = self._get_client()
         import lark_oapi.api.im.v1 as lark_im_v1
@@ -124,8 +140,8 @@ class FeishuClient:
             .request_body(
                 lark_im_v1.CreateMessageRequestBody.builder()
                 .receive_id(receive_id)
-                .msg_type("text")
-                .content(json.dumps({"text": text}, ensure_ascii=False))
+                .msg_type(msg_type)
+                .content(content)
                 .build()
             )
             .build()
@@ -149,14 +165,30 @@ class FeishuClient:
         reply_in_thread: bool = False,
     ) -> FeishuSendResult:
         """Reply to existing message."""
+        content = json.dumps({"text": text}, ensure_ascii=False)
+        return await self.reply_message_content(
+            message_id=message_id,
+            msg_type="text",
+            content=content,
+            reply_in_thread=reply_in_thread,
+        )
+
+    async def reply_message_content(
+        self,
+        message_id: str,
+        msg_type: str,
+        content: str,
+        reply_in_thread: bool = False,
+    ) -> FeishuSendResult:
+        """Reply to existing message with explicit msg_type/content."""
         self._load_sdk()
         client = self._get_client()
         import lark_oapi.api.im.v1 as lark_im_v1
 
         body_builder = (
             lark_im_v1.ReplyMessageRequestBody.builder()
-            .msg_type("text")
-            .content(json.dumps({"text": text}, ensure_ascii=False))
+            .msg_type(msg_type)
+            .content(content)
         )
         if reply_in_thread:
             body_builder = body_builder.reply_in_thread(True)
@@ -178,3 +210,52 @@ class FeishuClient:
             reply_id = response.data.message_id
 
         return FeishuSendResult(success=True, message_id=reply_id, raw=data)
+
+    async def update_message_content(
+        self,
+        message_id: str,
+        content: str,
+        msg_type: str = "interactive",
+    ) -> FeishuSendResult:
+        """Update an existing message content.
+
+        Uses patch first for minimal payload updates; falls back to update with msg_type
+        when patch fails.
+        """
+        self._load_sdk()
+        client = self._get_client()
+        import lark_oapi.api.im.v1 as lark_im_v1
+
+        patch_request = (
+            lark_im_v1.PatchMessageRequest.builder()
+            .message_id(message_id)
+            .request_body(
+                lark_im_v1.PatchMessageRequestBody.builder()
+                .content(content)
+                .build()
+            )
+            .build()
+        )
+        patch_response = client.im.v1.message.patch(patch_request)
+        ok, data, err = self._extract_response(patch_response)
+        if ok:
+            return FeishuSendResult(success=True, message_id=message_id, raw=data)
+
+        update_request = (
+            lark_im_v1.UpdateMessageRequest.builder()
+            .message_id(message_id)
+            .request_body(
+                lark_im_v1.UpdateMessageRequestBody.builder()
+                .msg_type(msg_type)
+                .content(content)
+                .build()
+            )
+            .build()
+        )
+        update_response = client.im.v1.message.update(update_request)
+        ok2, data2, err2 = self._extract_response(update_response)
+        if ok2:
+            return FeishuSendResult(success=True, message_id=message_id, raw=data2)
+
+        merged_error = f"patch failed ({err}); update failed ({err2})"
+        return FeishuSendResult(success=False, error=merged_error, raw=data2 or data)

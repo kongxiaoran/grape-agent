@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #F2F2F2; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #1C2833;
+  padding: 15pt 40pt;
+}
+h1 {
+  color: #FFFFFF;
+  font-size: 28pt;
+  margin: 0;
+}
+.content {
+  padding: 20pt 40pt 40pt 40pt;
+  flex: 1;
+  display: flex;
+  gap: 20pt;
+}
+.kpi-card {
+  flex: 1;
+  background: #FFFFFF;
+  padding: 25pt 20pt;
+  border-radius: 8pt;
+  text-align: center;
+  box-shadow: 0 2pt 8pt rgba(0,0,0,0.1);
+}
+.kpi-icon {
+  background: #1C2833;
+  width: 55pt;
+  height: 55pt;
+  border-radius: 50%;
+  margin: 0 auto 15pt auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-symbol {
+  color: #F96D00;
+  font-size: 28pt;
+  font-weight: bold;
+  margin: 0;
+}
+h2 {
+  color: #1C2833;
+  font-size: 14pt;
+  margin: 0 0 12pt 0;
+}
+.kpi-value {
+  color: #F96D00;
+  font-size: 36pt;
+  font-weight: bold;
+  margin: 0 0 8pt 0;
+}
+.kpi-desc {
+  color: #2E4053;
+  font-size: 11pt;
+  margin: 0;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>预期成果 (KPI)</h1>
+</div>
+<div class="content">
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <p class="icon-symbol">↑</p>
+    </div>
+    <h2>销售额增长</h2>
+    <p class="kpi-value">35%</p>
+    <p class="kpi-desc">年度增长率</p>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <p class="icon-symbol">👤</p>
+    </div>
+    <h2>会员增长</h2>
+    <p class="kpi-value">50万+</p>
+    <p class="kpi-desc">新增会员数</p>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <p class="icon-symbol">★</p>
+    </div>
+    <h2>客户满意度</h2>
+    <p class="kpi-value">92%</p>
+    <p class="kpi-desc">满意度评分</p>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">
+      <p class="icon-symbol">◎</p>
+    </div>
+    <h2>复购率</h2>
+    <p class="kpi-value">45%</p>
+    <p class="kpi-desc">会员复购率</p>
+  </div>
+</div>
+</body>
+</html>

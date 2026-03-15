@@ -33,7 +33,7 @@ async def test_wrapper_anthropic_provider():
     # Simple messages
     messages = [
         Message(role="system", content="You are a helpful assistant."),
-        Message(role="user", content="Say 'Hello, Mini Agent!' and nothing else."),
+        Message(role="user", content="Say 'Hello, Grape Agent!' and nothing else."),
     ]
 
     try:
@@ -79,7 +79,7 @@ async def test_wrapper_openai_provider():
     # Simple messages
     messages = [
         Message(role="system", content="You are a helpful assistant."),
-        Message(role="user", content="Say 'Hello, Mini Agent!' and nothing else."),
+        Message(role="user", content="Say 'Hello, Grape Agent!' and nothing else."),
     ]
 
     try:

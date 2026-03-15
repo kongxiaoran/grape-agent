@@ -1,4 +1,4 @@
-"""Feishu integration package for Mini-Agent."""
+"""Feishu integration package for Grape-Agent."""
 
 from .bridge import FeishuAgentBridge
 
