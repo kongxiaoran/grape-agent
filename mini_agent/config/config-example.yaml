@@ -185,7 +185,10 @@ webterm_bridge:
 # MemOS provides cloud-based long-term memory for AI agents.
 # Features: semantic search, multi-agent memory sharing, 72% token reduction.
 # Get your API key at: https://memos-dashboard.openmem.net
-# Install SDK: pip install MemoryOS -U
+#
+# Installation (requires fastapi<0.116.0, may conflict with other deps):
+#   pip install MemoryOS
+#
 memos:
   enabled: false
   api_key: ""  # Your MemOS API key (e.g., mpg-xxx)

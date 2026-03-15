@@ -25,8 +25,16 @@ dependencies = [
     "lark-oapi>=1.0.0",
     "fastapi>=0.116.0",
     "uvicorn>=0.35.0",
-    "MemoryOS>=0.1.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+# Note: MemOS memory support requires manual installation:
+#   pip install MemoryOS
+# This is due to fastapi version conflicts (MemoryOS requires fastapi<0.116.0)
 
 [project.scripts]
 grape-agent = "mini_agent.cli:main"
@@ -34,12 +42,6 @@ grape = "mini_agent.cli:main"
 grape-agent-acp = "mini_agent.acp.server:main"
 grape-agent-feishu = "mini_agent.feishu.server_ws:main"
 grape-agent-webterm-bridge = "mini_agent.webterm_bridge.server:main"
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0",
-]
 
 [build-system]
 requires = ["setuptools>=61.0"]
