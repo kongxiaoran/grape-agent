@@ -25,6 +25,48 @@ from mini_agent.tools.base import Tool, ToolResult
 # Lazy import to avoid startup errors if SDK not installed
 _memos_clients: dict[str, Any] = {}
 _memos_available = None
+_memos_logger_patched = False
+
+
+def _patch_memos_logger_for_packaged_runtime() -> None:
+    """Patch MemOS logger init to avoid hard failures in packaged runtimes.
+
+    In some onefile packaging modes (PyInstaller/Nuitka), MemOS logging
+    dictConfig may fail when resolving dynamic filter classes (e.g.
+    ``context_filter``). That failure happens during ``MemOSClient`` import and
+    breaks all memory tools.
+
+    This patch keeps normal behavior when possible, but falls back to a safe
+    silent logger if MemOS logging bootstrap fails.
+    """
+    global _memos_logger_patched
+    if _memos_logger_patched:
+        return
+
+    try:
+        import memos.log as memos_log
+    except Exception:
+        return
+
+    original_get_logger = getattr(memos_log, "get_logger", None)
+    if not callable(original_get_logger):
+        _memos_logger_patched = True
+        return
+
+    def _safe_get_logger(name: str | None = None) -> logging.Logger:
+        try:
+            return original_get_logger(name)
+        except Exception:
+            # Fallback: do not let logger bootstrap failure block memory features.
+            logger_name = "memos" if not name else f"memos.{name}"
+            logger = logging.getLogger(logger_name)
+            logger.propagate = False
+            if not logger.handlers:
+                logger.addHandler(logging.NullHandler())
+            return logger
+
+    setattr(memos_log, "get_logger", _safe_get_logger)
+    _memos_logger_patched = True
 
 
 @contextmanager
@@ -97,6 +139,7 @@ def _check_memos_available() -> bool:
     if _memos_available is None:
         try:
             with _suppress_memos_noise():
+                _patch_memos_logger_for_packaged_runtime()
                 from memos.api.client import MemOSClient  # noqa: F401
             _memos_available = True
         except ImportError:
@@ -117,6 +160,7 @@ def _get_client(api_key: str | None = None):
         return cached
 
     with _suppress_memos_noise():
+        _patch_memos_logger_for_packaged_runtime()
         from memos.api.client import MemOSClient
 
         client = MemOSClient(api_key=resolved_api_key or None)

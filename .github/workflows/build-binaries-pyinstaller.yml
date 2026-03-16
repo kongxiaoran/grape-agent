@@ -17,6 +17,7 @@ on:
 
 jobs:
   build:
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -30,8 +31,11 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v3
 
-      - name: Sync dependencies
-        run: uv sync
+      - name: Install Python 3.10
+        run: uv python install 3.10
+
+      - name: Sync dependencies (Python 3.10)
+        run: uv sync --python 3.10
 
       - name: Build selected binaries (Unix)
         if: runner.os != 'Windows'
@@ -43,11 +47,15 @@ jobs:
           build_one() {
             local output_name="$1"
             local entry_file="$2"
-            uv run --with pyinstaller pyinstaller \
+            uv run --python 3.10 --with pyinstaller pyinstaller \
               --noconfirm --clean --onefile \
               --name "${output_name}" \
               --collect-submodules mini_agent \
               --collect-data mini_agent \
+              --collect-submodules memos \
+              --collect-data memos \
+              --collect-submodules lark_oapi \
+              --collect-submodules python_socks \
               "${entry_file}"
           }
 
@@ -65,11 +73,15 @@ jobs:
           $target = "${{ github.event.inputs.target || 'grape-agent' }}"
 
           function Build-One([string]$outputName, [string]$entryFile) {
-            uv run --with pyinstaller pyinstaller `
+            uv run --python 3.10 --with pyinstaller pyinstaller `
               --noconfirm --clean --onefile `
               --name $outputName `
               --collect-submodules mini_agent `
               --collect-data mini_agent `
+              --collect-submodules memos `
+              --collect-data memos `
+              --collect-submodules lark_oapi `
+              --collect-submodules python_socks `
               $entryFile
           }
 

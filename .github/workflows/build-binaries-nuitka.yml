@@ -33,8 +33,11 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v3
 
-      - name: Sync dependencies
-        run: uv sync
+      - name: Install Python 3.10
+        run: uv python install 3.10
+
+      - name: Sync dependencies (Python 3.10)
+        run: uv sync --python 3.10
 
       - name: Build selected binaries (Unix)
         if: runner.os != 'Windows'
@@ -46,12 +49,15 @@ jobs:
           build_one() {
             local output_name="$1"
             local entry_file="$2"
-            uv run --with nuitka python -m nuitka \
+            uv run --python 3.10 --with nuitka python -m nuitka \
               --onefile \
               --assume-yes-for-downloads \
               --follow-imports \
               --include-package=mini_agent \
               --include-package-data=mini_agent \
+              --include-package=memos \
+              --include-package-data=memos \
+              --include-package=lark_oapi \
               --noinclude-setuptools-mode=nofollow \
               --noinclude-pytest-mode=nofollow \
               --noinclude-unittest-mode=nofollow \
@@ -82,12 +88,15 @@ jobs:
           $target = "${{ github.event.inputs.target || 'grape-agent' }}"
 
           function Build-One([string]$outputName, [string]$entryFile) {
-            uv run --with nuitka python -m nuitka `
+            uv run --python 3.10 --with nuitka python -m nuitka `
               --onefile `
               --assume-yes-for-downloads `
               --follow-imports `
               --include-package=mini_agent `
               --include-package-data=mini_agent `
+              --include-package=memos `
+              --include-package-data=memos `
+              --include-package=lark_oapi `
               --noinclude-setuptools-mode=nofollow `
               --noinclude-pytest-mode=nofollow `
               --noinclude-unittest-mode=nofollow `
