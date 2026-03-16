@@ -14,6 +14,7 @@ import argparse
 import asyncio
 import importlib.metadata
 import inspect
+import os
 import platform
 import re
 import shutil
@@ -24,10 +25,11 @@ from datetime import datetime
 from pathlib import Path
 from time import perf_counter
 from typing import List
+from uuid import uuid4
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.completion import Completer, Completion, WordCompleter
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
@@ -45,6 +47,7 @@ from mini_agent.gateway.router import GatewayRouter
 from mini_agent.gateway.server import GatewayServer
 from mini_agent.runtime_factory import (
     add_workspace_tools as add_workspace_tools_shared,
+    create_turn_memory_hook,
     build_session_tools,
     build_runtime_bundle,
     initialize_base_tools as initialize_base_tools_shared,
@@ -106,6 +109,31 @@ def get_agent_version() -> str:
         return "0.1.0"
     except Exception:
         return "0.1.0"
+
+
+class CommandCompleter(Completer):
+    """Custom completer for slash commands that shows suggestions immediately after typing /"""
+
+    COMMANDS = ["/help", "/clear", "/history", "/stats", "/log", "/config", "/exit", "/quit", "/q"]
+
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor
+
+        # Only show completions when text starts with /
+        if not text.startswith("/"):
+            return
+
+        # Get the current word being typed
+        word = text
+
+        # Filter commands that start with what the user typed
+        for cmd in self.COMMANDS:
+            if cmd.startswith(word):
+                yield Completion(
+                    cmd,
+                    start_position=-len(word),
+                    display=cmd,
+                )
 
 
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
@@ -296,8 +324,13 @@ def read_log_file(filename: str, style: str = "legacy") -> None:
             print(f"\n{Colors.RED}❌ Error reading file: {e}{Colors.RESET}\n")
 
 
-def print_banner():
+def print_banner(style: str = "legacy"):
     """Print welcome banner with proper alignment"""
+    if style == "claude":
+        # Claude style: minimal, no box
+        print()
+        return
+
     BOX_WIDTH = 58
     banner_text = f"{Colors.BOLD}🤖 Grape Agent - Multi-turn Interactive Session{Colors.RESET}"
     banner_width = calculate_display_width(banner_text)
@@ -327,6 +360,8 @@ Available Commands:
   /stats      Show session statistics
   /log        Show log directory and recent files
   /log <file> Read a specific log file
+  /config     Show current config file path
+  /config <path>  Switch to specified config file
   /exit       Exit program (also: exit, quit, q)
 
 Keyboard Shortcuts:
@@ -350,6 +385,8 @@ Keyboard Shortcuts:
   {Colors.BRIGHT_GREEN}/stats{Colors.RESET}     - Show session statistics
   {Colors.BRIGHT_GREEN}/log{Colors.RESET}       - Show log directory and recent files
   {Colors.BRIGHT_GREEN}/log <file>{Colors.RESET} - Read a specific log file
+  {Colors.BRIGHT_GREEN}/config{Colors.RESET}    - Show current config file path
+  {Colors.BRIGHT_GREEN}/config <path>{Colors.RESET} - Switch to specified config file
   {Colors.BRIGHT_GREEN}/exit{Colors.RESET}      - Exit program (also: exit, quit, q)
 
 {Colors.BOLD}{Colors.BRIGHT_YELLOW}Keyboard Shortcuts:{Colors.RESET}
@@ -372,8 +409,14 @@ Keyboard Shortcuts:
     print(help_text)
 
 
-def print_session_info(agent: Agent, workspace_dir: Path, model: str):
+def print_session_info(agent: Agent, workspace_dir: Path, model: str, style: str = "legacy"):
     """Print session information with proper alignment"""
+    if style == "claude":
+        # Claude style: minimal info, no box
+        print(f"{Colors.DIM}Model: {model} · Workspace: {workspace_dir}{Colors.RESET}")
+        print()
+        return
+
     BOX_WIDTH = 58
 
     def print_info_line(text: str):
@@ -499,7 +542,7 @@ def print_claude_welcome_card(
             return "enabled" if enabled else "disabled"
         if not enabled:
             return "disabled"
-        return "running" if running else "enabled"
+        return "connected" if running else "enabled"
 
     title = f" Grape Agent v{version} "
     title_padding = max(0, card_width - calculate_display_width(title))
@@ -623,6 +666,49 @@ def format_tokens_compact(tokens: int) -> str:
     return str(tokens)
 
 
+def _normalize_user_id(raw: str | None) -> str:
+    """Normalize user id to a stable safe token."""
+    text = str(raw or "").strip()
+    if not text:
+        return ""
+    normalized = re.sub(r"[^a-zA-Z0-9._-]+", "_", text)
+    return normalized.strip("._-")
+
+
+def resolve_cli_user_id(user_id_override: str | None = None) -> str:
+    """Resolve CLI user id for memory isolation.
+
+    Priority:
+    1) --user-id
+    2) GRAPE_USER_ID env var
+    3) ~/.grape/user_id persisted value (auto-created if missing)
+    """
+    cli_user = _normalize_user_id(user_id_override)
+    if cli_user:
+        return cli_user
+
+    env_user = _normalize_user_id(os.environ.get("GRAPE_USER_ID"))
+    if env_user:
+        return env_user
+
+    user_id_file = Path.home() / ".grape" / "user_id"
+    try:
+        if user_id_file.exists():
+            persisted = _normalize_user_id(user_id_file.read_text(encoding="utf-8"))
+            if persisted:
+                return persisted
+    except Exception:
+        pass
+
+    generated = f"u_{uuid4().hex[:16]}"
+    try:
+        user_id_file.parent.mkdir(parents=True, exist_ok=True)
+        user_id_file.write_text(f"{generated}\n", encoding="utf-8")
+    except Exception:
+        pass
+    return generated
+
+
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments
 
@@ -667,6 +753,12 @@ Examples:
         choices=["legacy", "compact", "claude"],
         default=None,
         help="Override terminal UI style for this run",
+    )
+    parser.add_argument(
+        "--user-id",
+        type=str,
+        default=None,
+        help="Stable user identifier for memory isolation (overrides GRAPE_USER_ID)",
     )
 
     # Subcommands
@@ -753,7 +845,12 @@ async def _quiet_cleanup():
         pass
 
 
-async def run_agent(workspace_dir: Path, task: str = None, ui_style_override: str | None = None):
+async def run_agent(
+    workspace_dir: Path,
+    task: str = None,
+    ui_style_override: str | None = None,
+    user_id_override: str | None = None,
+):
     """Run Agent in interactive or non-interactive mode.
 
     Args:
@@ -799,11 +896,13 @@ async def run_agent(workspace_dir: Path, task: str = None, ui_style_override: st
     if ui_style_override:
         config.ui.style = ui_style_override
 
+    cli_user_id = resolve_cli_user_id(user_id_override)
+
     # Quiet noisy Feishu/Lark SDK logging in CLI mode.
     try:
         import logging
 
-        for name in ("lark", "lark_oapi"):
+        for name in ("Lark", "lark", "lark_oapi"):
             logger = logging.getLogger(name)
             logger.setLevel(logging.WARNING)
             logger.propagate = False
@@ -905,6 +1004,7 @@ async def run_agent(workspace_dir: Path, task: str = None, ui_style_override: st
             workspace_path = profile.workspace / channel / session_id
             workspace_path.mkdir(parents=True, exist_ok=True)
             session_key = session_store.make_key(channel, session_id, agent_id=resolved_agent_id)
+            memory_sender_id = cli_user_id if channel in {"terminal", "cli"} else None
 
             def _factory() -> Agent:
                 extra_tools: list[Tool] = []
@@ -923,8 +1023,20 @@ async def run_agent(workspace_dir: Path, task: str = None, ui_style_override: st
                     config=config,
                     workspace_dir=workspace_path,
                     include_recall_notes=True,
+                    channel=channel,
+                    chat_id=session_id,
+                    sender_id=memory_sender_id,
+                    agent_id=resolved_agent_id,
                     extra_tools=extra_tools,
                     deny_tool_names=deny_tool_names,
+                    log=runtime_log,
+                )
+                turn_memory_hook = create_turn_memory_hook(
+                    config=config,
+                    channel=channel,
+                    chat_id=session_id,
+                    sender_id=memory_sender_id,
+                    agent_id=resolved_agent_id,
                     log=runtime_log,
                 )
                 return Agent(
@@ -934,6 +1046,7 @@ async def run_agent(workspace_dir: Path, task: str = None, ui_style_override: st
                     max_steps=config.agent.max_steps,
                     workspace_dir=str(workspace_path),
                     ui_renderer=ConsoleRenderer.from_runtime(config.ui),
+                    turn_memory_hook=turn_memory_hook,
                 )
 
             return await session_store.get_or_create(
@@ -1045,11 +1158,7 @@ async def run_agent(workspace_dir: Path, task: str = None, ui_style_override: st
             return
 
         # 9. Setup prompt_toolkit session
-        command_completer = WordCompleter(
-            ["/help", "/clear", "/history", "/stats", "/log", "/exit", "/quit", "/q"],
-            ignore_case=True,
-            sentence=True,
-        )
+        command_completer = CommandCompleter()
 
         if config.ui.style == "claude":
             prompt_style = Style.from_dict(
@@ -1182,6 +1291,60 @@ async def run_agent(workspace_dir: Path, task: str = None, ui_style_override: st
                         else:
                             filename = parts[1].strip("\"'")
                             read_log_file(filename, style=config.ui.style)
+                        continue
+
+                    elif command == "/config" or command.startswith("/config "):
+                        parts = user_input.split(maxsplit=1)
+                        if len(parts) == 1:
+                            # Show current config path
+                            if config.ui.style == "claude":
+                                print(f"{Colors.DIM}Current config: {display_path(config_path)}{Colors.RESET}\n")
+                            else:
+                                print(f"{Colors.BRIGHT_CYAN}📄 Current config: {config_path}{Colors.RESET}\n")
+                        else:
+                            # Switch to new config
+                            new_config_path = Path(parts[1].strip("\"'")).expanduser().absolute()
+                            if not new_config_path.exists():
+                                if config.ui.style == "claude":
+                                    print(f"{Colors.DIM}Config file not found: {display_path(new_config_path)}{Colors.RESET}\n")
+                                else:
+                                    print(f"{Colors.RED}❌ Config file not found: {new_config_path}{Colors.RESET}\n")
+                                continue
+
+                            try:
+                                # Load new config
+                                new_config = Config.from_yaml(new_config_path)
+
+                                # Update config reference
+                                config = new_config
+                                channel_context.config = new_config
+
+                                # Clear runtime cache to force re-initialization
+                                runtime_bundle_cache.clear()
+
+                                # Re-create current session with new config
+                                old_count = len(agent.messages)
+                                session_store.pop("terminal", "main", agent_id=terminal_session.agent_id)
+                                terminal_session = await create_managed_session(
+                                    agent_id=terminal_session.agent_id,
+                                    channel="terminal",
+                                    session_id="main",
+                                )
+                                agent = terminal_session.agent
+
+                                config_path = new_config_path
+                                if config.ui.style == "claude":
+                                    print(f"{Colors.DIM}Switched to config: {display_path(config_path)}{Colors.RESET}")
+                                    print(f"{Colors.DIM}Cleared {old_count - 1} messages, started a new session with new config.{Colors.RESET}\n")
+                                else:
+                                    print(f"{Colors.GREEN}✅ Switched to config: {config_path}{Colors.RESET}")
+                                    print(f"{Colors.GREEN}✅ Cleared {old_count - 1} messages, started a new session{Colors.RESET}\n")
+
+                            except Exception as e:
+                                if config.ui.style == "claude":
+                                    print(f"{Colors.DIM}Failed to load config: {e}{Colors.RESET}\n")
+                                else:
+                                    print(f"{Colors.RED}❌ Failed to load config: {e}{Colors.RESET}\n")
                         continue
 
                     else:
@@ -1324,7 +1487,14 @@ def main():
     workspace_dir.mkdir(parents=True, exist_ok=True)
 
     # Run the agent (config always loaded from package directory)
-    asyncio.run(run_agent(workspace_dir, task=args.task, ui_style_override=args.ui_style))
+    asyncio.run(
+        run_agent(
+            workspace_dir,
+            task=args.task,
+            ui_style_override=args.ui_style,
+            user_id_override=args.user_id,
+        )
+    )
 
 
 if __name__ == "__main__":

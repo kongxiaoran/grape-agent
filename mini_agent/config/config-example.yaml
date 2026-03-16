@@ -192,7 +192,31 @@ webterm_bridge:
 memos:
   enabled: false
   api_key: ""  # Your MemOS API key (e.g., mpg-xxx)
-  # When enabled, replaces local note_tool with MemOS cloud memory
+  # Optional explicit conversation scope override (default: derived from channel/session)
+  conversation_id: ""
+  # Optional query prefix to improve recall quality
+  query_prefix: ""
+
+  # Automatic lifecycle memory (recommended)
+  auto_recall_enabled: true
+  auto_add_enabled: true
+  add_include_assistant: true
+  add_async_mode: true
+  add_throttle_sec: 0.0
+
+  # Recall tuning
+  recall_memory_limit_number: 6
+  recall_preference_limit_number: 4
+  recall_include_preference: true
+  recall_include_tool_memory: false
+  recall_tool_memory_limit_number: 4
+  recall_max_items: 8
+  recall_max_item_chars: 220
+  recall_min_relativity: 0.0
+
+  # Metadata
+  source: "grape-agent"
+  tags: []
 
 # ===== Gateway Control Plane (Optional) =====
 # Local TCP JSON line protocol:

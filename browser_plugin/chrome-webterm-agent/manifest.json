@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Grape-Agent Webterm Helper",
+  "version": "0.1.0",
+  "description": "Bridge bastion web terminal output to Grape-Agent and inject suggested commands.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "sidePanel",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "all_frames": true,
+      "js": [
+        "content_script.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Grape-Agent Webterm"
+  }
+}

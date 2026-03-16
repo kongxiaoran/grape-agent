@@ -266,6 +266,29 @@ class MemOSConfig(BaseModel):
 
     enabled: bool = False
     api_key: str = ""
+    conversation_id: str = ""
+    query_prefix: str = ""
+
+    # Automatic memory lifecycle (OpenClaw-style): recall before turn, add after turn.
+    auto_recall_enabled: bool = True
+    auto_add_enabled: bool = True
+    add_include_assistant: bool = True
+    add_async_mode: bool = True
+    add_throttle_sec: float = 0.0
+
+    # Recall controls.
+    recall_memory_limit_number: int = 6
+    recall_preference_limit_number: int = 4
+    recall_include_preference: bool = True
+    recall_include_tool_memory: bool = False
+    recall_tool_memory_limit_number: int = 4
+    recall_max_items: int = 8
+    recall_max_item_chars: int = 220
+    recall_min_relativity: float = 0.0
+
+    # Add metadata.
+    source: str = "grape-agent"
+    tags: list[str] = Field(default_factory=list)
 
 
 class Config(BaseModel):
@@ -656,9 +679,27 @@ class Config(BaseModel):
 
         # Parse MemOS configuration
         memos_data = data.get("memos", {})
+        memos_dict = memos_data if isinstance(memos_data, dict) else {}
         memos_config = MemOSConfig(
-            enabled=(memos_data.get("enabled", False) if isinstance(memos_data, dict) else False),
-            api_key=(memos_data.get("api_key", "") if isinstance(memos_data, dict) else ""),
+            enabled=bool(memos_dict.get("enabled", False)),
+            api_key=str(memos_dict.get("api_key", "") or ""),
+            conversation_id=str(memos_dict.get("conversation_id", "") or ""),
+            query_prefix=str(memos_dict.get("query_prefix", "") or ""),
+            auto_recall_enabled=bool(memos_dict.get("auto_recall_enabled", True)),
+            auto_add_enabled=bool(memos_dict.get("auto_add_enabled", True)),
+            add_include_assistant=bool(memos_dict.get("add_include_assistant", True)),
+            add_async_mode=bool(memos_dict.get("add_async_mode", True)),
+            add_throttle_sec=float(memos_dict.get("add_throttle_sec", 0.0) or 0.0),
+            recall_memory_limit_number=int(memos_dict.get("recall_memory_limit_number", 6) or 6),
+            recall_preference_limit_number=int(memos_dict.get("recall_preference_limit_number", 4) or 4),
+            recall_include_preference=bool(memos_dict.get("recall_include_preference", True)),
+            recall_include_tool_memory=bool(memos_dict.get("recall_include_tool_memory", False)),
+            recall_tool_memory_limit_number=int(memos_dict.get("recall_tool_memory_limit_number", 4) or 4),
+            recall_max_items=int(memos_dict.get("recall_max_items", 8) or 8),
+            recall_max_item_chars=int(memos_dict.get("recall_max_item_chars", 220) or 220),
+            recall_min_relativity=float(memos_dict.get("recall_min_relativity", 0.0) or 0.0),
+            source=str(memos_dict.get("source", "grape-agent") or "grape-agent"),
+            tags=[str(tag) for tag in (memos_dict.get("tags", []) or []) if str(tag).strip()],
         )
 
         return cls(

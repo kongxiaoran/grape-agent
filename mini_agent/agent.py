@@ -3,7 +3,7 @@
 import asyncio
 from pathlib import Path
 from time import perf_counter
-from typing import Optional
+from typing import Any, Optional, Protocol
 
 import tiktoken
 
@@ -41,6 +41,20 @@ class Colors:
     BRIGHT_WHITE = "\033[97m"
 
 
+class TurnMemoryHook(Protocol):
+    """Per-turn memory lifecycle hook.
+
+    Implementations can inject recall context before the first LLM call of a user turn,
+    and persist turn result after successful completion.
+    """
+
+    async def prepare_user_message(self, user_query: str) -> str:
+        """Return possibly-augmented user query for this turn."""
+
+    async def record_turn(self, user_query: str, assistant_response: str, *, success: bool = True) -> None:
+        """Persist successful turn content."""
+
+
 class Agent:
     """Single agent with basic tools and MCP support."""
 
@@ -53,6 +67,7 @@ class Agent:
         workspace_dir: str = "./workspace",
         token_limit: int = 80000,  # Summary triggered when tokens exceed this value
         ui_renderer: ConsoleRenderer | None = None,
+        turn_memory_hook: TurnMemoryHook | None = None,
     ):
         self.llm = llm_client
         self.tools = {tool.name: tool for tool in tools}
@@ -60,6 +75,7 @@ class Agent:
         self.token_limit = token_limit
         self.workspace_dir = Path(workspace_dir)
         self.ui = ui_renderer or ConsoleRenderer()
+        self.turn_memory_hook = turn_memory_hook
         # Cancellation event for interrupting agent execution (set externally, e.g., by Esc key)
         self.cancel_event: Optional[asyncio.Event] = None
 
@@ -83,10 +99,92 @@ class Agent:
         self.api_total_tokens: int = 0
         # Flag to skip token check right after summary (avoid consecutive triggers)
         self._skip_next_token_check: bool = False
+        # Current turn tracking for auto memory lifecycle.
+        self._turn_user_index: int | None = None
+        self._turn_user_original_content: str | list[dict[str, Any]] | None = None
+        self._turn_user_text: str | None = None
 
     def add_user_message(self, content: str):
         """Add a user message to history."""
         self.messages.append(Message(role="user", content=content))
+
+    @staticmethod
+    def _extract_text_content(content: str | list[dict[str, Any]] | Any) -> str:
+        """Best-effort extraction of plain text from message content."""
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            parts: list[str] = []
+            for block in content:
+                if isinstance(block, dict):
+                    text = block.get("text")
+                    if isinstance(text, str):
+                        parts.append(text)
+            return "\n".join(parts)
+        if content is None:
+            return ""
+        return str(content)
+
+    async def _prepare_turn_memory_context(self) -> None:
+        """Recall and inject memory context into the latest user message for this turn."""
+        self._turn_user_index = None
+        self._turn_user_original_content = None
+        self._turn_user_text = None
+
+        if self.turn_memory_hook is None:
+            return
+
+        latest_user_idx = None
+        for i in range(len(self.messages) - 1, -1, -1):
+            if self.messages[i].role == "user":
+                latest_user_idx = i
+                break
+        if latest_user_idx is None:
+            return
+
+        original_content = self.messages[latest_user_idx].content
+        user_text = self._extract_text_content(original_content).strip()
+        if not user_text:
+            return
+
+        self._turn_user_index = latest_user_idx
+        self._turn_user_original_content = original_content
+        self._turn_user_text = user_text
+
+        try:
+            prepared = await self.turn_memory_hook.prepare_user_message(user_text)
+        except Exception:
+            return
+
+        if isinstance(prepared, str) and prepared.strip() and prepared != user_text:
+            self.messages[latest_user_idx].content = prepared
+
+    async def _record_turn_memory(self, assistant_response: str, *, success: bool) -> None:
+        """Persist completed user turn to memory backend."""
+        if self.turn_memory_hook is None or not self._turn_user_text:
+            return
+        try:
+            await self.turn_memory_hook.record_turn(
+                self._turn_user_text,
+                assistant_response,
+                success=success,
+            )
+        except Exception:
+            return
+
+    def _restore_turn_user_message(self) -> None:
+        """Restore original user message content after this turn finishes."""
+        if self._turn_user_index is None or self._turn_user_original_content is None:
+            self._turn_user_index = None
+            self._turn_user_original_content = None
+            self._turn_user_text = None
+            return
+        if 0 <= self._turn_user_index < len(self.messages):
+            if self.messages[self._turn_user_index].role == "user":
+                self.messages[self._turn_user_index].content = self._turn_user_original_content
+        self._turn_user_index = None
+        self._turn_user_original_content = None
+        self._turn_user_text = None
 
     def _check_cancelled(self) -> bool:
         """Check if agent execution has been cancelled.
@@ -336,158 +434,163 @@ Requirements:
 
         # Start new run, initialize log file
         self.logger.start_new_run()
+        await self._prepare_turn_memory_context()
 
         step = 0
         run_start_time = perf_counter()
 
-        while step < self.max_steps:
-            # Check for cancellation at start of each step
-            if self._check_cancelled():
-                self._cleanup_incomplete_messages()
-                cancel_msg = "Task cancelled by user."
-                print(f"\n{Colors.BRIGHT_YELLOW}⚠️  {cancel_msg}{Colors.RESET}")
-                return cancel_msg
-
-            step_start_time = perf_counter()
-            # Check and summarize message history to prevent context overflow
-            await self._summarize_messages()
-
-            self.ui.step_start(step + 1, self.max_steps)
-
-            # Get tool list for LLM call
-            tool_list = list(self.tools.values())
-
-            # Log LLM request and call LLM with Tool objects directly
-            self.logger.log_request(messages=self.messages, tools=tool_list)
-
-            self.ui.start_thinking_status()
-            try:
-                response = await self.llm.generate(messages=self.messages, tools=tool_list)
-                self.ui.stop_thinking_status(response.usage)
-            except Exception as e:
-                self.ui.stop_thinking_status(None)
-                # Check if it's a retry exhausted error
-                from .retry import RetryExhaustedError
-
-                if isinstance(e, RetryExhaustedError):
-                    error_msg = f"LLM call failed after {e.attempts} retries\nLast error: {str(e.last_exception)}"
-                    print(f"\n{Colors.BRIGHT_RED}❌ Retry failed:{Colors.RESET} {error_msg}")
-                else:
-                    error_msg = f"LLM call failed: {str(e)}"
-                    print(f"\n{Colors.BRIGHT_RED}❌ Error:{Colors.RESET} {error_msg}")
-                return error_msg
-
-            # Accumulate API reported token usage
-            if response.usage:
-                self.api_total_tokens = response.usage.total_tokens
-
-            # Log LLM response
-            self.logger.log_response(
-                content=response.content,
-                thinking=response.thinking,
-                tool_calls=response.tool_calls,
-                provider_events=response.provider_events,
-                finish_reason=response.finish_reason,
-            )
-
-            # Add assistant message
-            assistant_msg = Message(
-                role="assistant",
-                content=response.content,
-                thinking=response.thinking,
-                tool_calls=response.tool_calls,
-            )
-            self.messages.append(assistant_msg)
-
-            # Print thinking if present
-            self.ui.thinking(response.thinking)
-            self.ui.provider_events(response.provider_events)
-
-            # Print assistant response
-            self.ui.assistant_content(response.content)
-
-            # Check if task is complete (no tool calls)
-            if not response.tool_calls:
-                step_elapsed = perf_counter() - step_start_time
-                total_elapsed = perf_counter() - run_start_time
-                self.ui.step_done(step + 1, step_elapsed, total_elapsed)
-                return response.content
-
-            # Check for cancellation before executing tools
-            if self._check_cancelled():
-                self._cleanup_incomplete_messages()
-                cancel_msg = "Task cancelled by user."
-                print(f"\n{Colors.BRIGHT_YELLOW}⚠️  {cancel_msg}{Colors.RESET}")
-                return cancel_msg
-
-            # Execute tool calls
-            for tool_call in response.tool_calls:
-                tool_call_id = tool_call.id
-                function_name = tool_call.function.name
-                arguments = tool_call.function.arguments
-
-                self.ui.tool_call(function_name, arguments)
-
-                # Execute tool
-                if function_name not in self.tools:
-                    result = ToolResult(
-                        success=False,
-                        content="",
-                        error=f"Unknown tool: {function_name}",
-                    )
-                else:
-                    try:
-                        tool = self.tools[function_name]
-                        result = await tool.execute(**arguments)
-                    except Exception as e:
-                        # Catch all exceptions during tool execution, convert to failed ToolResult
-                        import traceback
-
-                        error_detail = f"{type(e).__name__}: {str(e)}"
-                        error_trace = traceback.format_exc()
-                        result = ToolResult(
-                            success=False,
-                            content="",
-                            error=f"Tool execution failed: {error_detail}\n\nTraceback:\n{error_trace}",
-                        )
-
-                # Log tool execution result
-                self.logger.log_tool_result(
-                    tool_name=function_name,
-                    arguments=arguments,
-                    result_success=result.success,
-                    result_content=result.content if result.success else None,
-                    result_error=result.error if not result.success else None,
-                )
-
-                self.ui.tool_result(function_name, result)
-
-                # Add tool result message
-                tool_msg = Message(
-                    role="tool",
-                    content=result.content if result.success else f"Error: {result.error}",
-                    tool_call_id=tool_call_id,
-                    name=function_name,
-                )
-                self.messages.append(tool_msg)
-
-                # Check for cancellation after each tool execution
+        try:
+            while step < self.max_steps:
+                # Check for cancellation at start of each step
                 if self._check_cancelled():
                     self._cleanup_incomplete_messages()
                     cancel_msg = "Task cancelled by user."
                     print(f"\n{Colors.BRIGHT_YELLOW}⚠️  {cancel_msg}{Colors.RESET}")
                     return cancel_msg
 
-            step_elapsed = perf_counter() - step_start_time
-            total_elapsed = perf_counter() - run_start_time
-            self.ui.step_done(step + 1, step_elapsed, total_elapsed)
+                step_start_time = perf_counter()
+                # Check and summarize message history to prevent context overflow
+                await self._summarize_messages()
 
-            step += 1
+                self.ui.step_start(step + 1, self.max_steps)
 
-        # Max steps reached
-        error_msg = f"Task couldn't be completed after {self.max_steps} steps."
-        print(f"\n{Colors.BRIGHT_YELLOW}⚠️  {error_msg}{Colors.RESET}")
-        return error_msg
+                # Get tool list for LLM call
+                tool_list = list(self.tools.values())
+
+                # Log LLM request and call LLM with Tool objects directly
+                self.logger.log_request(messages=self.messages, tools=tool_list)
+
+                self.ui.start_thinking_status()
+                try:
+                    response = await self.llm.generate(messages=self.messages, tools=tool_list)
+                    self.ui.stop_thinking_status(response.usage)
+                except Exception as e:
+                    self.ui.stop_thinking_status(None)
+                    # Check if it's a retry exhausted error
+                    from .retry import RetryExhaustedError
+
+                    if isinstance(e, RetryExhaustedError):
+                        error_msg = f"LLM call failed after {e.attempts} retries\nLast error: {str(e.last_exception)}"
+                        print(f"\n{Colors.BRIGHT_RED}❌ Retry failed:{Colors.RESET} {error_msg}")
+                    else:
+                        error_msg = f"LLM call failed: {str(e)}"
+                        print(f"\n{Colors.BRIGHT_RED}❌ Error:{Colors.RESET} {error_msg}")
+                    return error_msg
+
+                # Accumulate API reported token usage
+                if response.usage:
+                    self.api_total_tokens = response.usage.total_tokens
+
+                # Log LLM response
+                self.logger.log_response(
+                    content=response.content,
+                    thinking=response.thinking,
+                    tool_calls=response.tool_calls,
+                    provider_events=response.provider_events,
+                    finish_reason=response.finish_reason,
+                )
+
+                # Add assistant message
+                assistant_msg = Message(
+                    role="assistant",
+                    content=response.content,
+                    thinking=response.thinking,
+                    tool_calls=response.tool_calls,
+                )
+                self.messages.append(assistant_msg)
+
+                # Print thinking if present
+                self.ui.thinking(response.thinking)
+                self.ui.provider_events(response.provider_events)
+
+                # Print assistant response
+                self.ui.assistant_content(response.content)
+
+                # Check if task is complete (no tool calls)
+                if not response.tool_calls:
+                    step_elapsed = perf_counter() - step_start_time
+                    total_elapsed = perf_counter() - run_start_time
+                    self.ui.step_done(step + 1, step_elapsed, total_elapsed)
+                    await self._record_turn_memory(response.content, success=True)
+                    return response.content
+
+                # Check for cancellation before executing tools
+                if self._check_cancelled():
+                    self._cleanup_incomplete_messages()
+                    cancel_msg = "Task cancelled by user."
+                    print(f"\n{Colors.BRIGHT_YELLOW}⚠️  {cancel_msg}{Colors.RESET}")
+                    return cancel_msg
+
+                # Execute tool calls
+                for tool_call in response.tool_calls:
+                    tool_call_id = tool_call.id
+                    function_name = tool_call.function.name
+                    arguments = tool_call.function.arguments
+
+                    self.ui.tool_call(function_name, arguments)
+
+                    # Execute tool
+                    if function_name not in self.tools:
+                        result = ToolResult(
+                            success=False,
+                            content="",
+                            error=f"Unknown tool: {function_name}",
+                        )
+                    else:
+                        try:
+                            tool = self.tools[function_name]
+                            result = await tool.execute(**arguments)
+                        except Exception as e:
+                            # Catch all exceptions during tool execution, convert to failed ToolResult
+                            import traceback
+
+                            error_detail = f"{type(e).__name__}: {str(e)}"
+                            error_trace = traceback.format_exc()
+                            result = ToolResult(
+                                success=False,
+                                content="",
+                                error=f"Tool execution failed: {error_detail}\n\nTraceback:\n{error_trace}",
+                            )
+
+                    # Log tool execution result
+                    self.logger.log_tool_result(
+                        tool_name=function_name,
+                        arguments=arguments,
+                        result_success=result.success,
+                        result_content=result.content if result.success else None,
+                        result_error=result.error if not result.success else None,
+                    )
+
+                    self.ui.tool_result(function_name, result)
+
+                    # Add tool result message
+                    tool_msg = Message(
+                        role="tool",
+                        content=result.content if result.success else f"Error: {result.error}",
+                        tool_call_id=tool_call_id,
+                        name=function_name,
+                    )
+                    self.messages.append(tool_msg)
+
+                    # Check for cancellation after each tool execution
+                    if self._check_cancelled():
+                        self._cleanup_incomplete_messages()
+                        cancel_msg = "Task cancelled by user."
+                        print(f"\n{Colors.BRIGHT_YELLOW}⚠️  {cancel_msg}{Colors.RESET}")
+                        return cancel_msg
+
+                step_elapsed = perf_counter() - step_start_time
+                total_elapsed = perf_counter() - run_start_time
+                self.ui.step_done(step + 1, step_elapsed, total_elapsed)
+
+                step += 1
+
+            # Max steps reached
+            error_msg = f"Task couldn't be completed after {self.max_steps} steps."
+            print(f"\n{Colors.BRIGHT_YELLOW}⚠️  {error_msg}{Colors.RESET}")
+            return error_msg
+        finally:
+            self._restore_turn_user_message()
 
     def get_history(self) -> list[Message]:
         """Get message history."""

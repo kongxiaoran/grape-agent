@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 from mini_agent.config import Config
 from mini_agent.llm import LLMClient
@@ -189,6 +189,10 @@ def add_workspace_tools(
     config: Config,
     workspace_dir: Path,
     include_recall_notes: bool = False,
+    channel: str | None = None,
+    chat_id: str | None = None,
+    sender_id: str | None = None,
+    agent_id: str | None = None,
 ) -> None:
     """Add workspace-dependent tools to a session tool list."""
     workspace_dir.mkdir(parents=True, exist_ok=True)
@@ -206,12 +210,80 @@ def add_workspace_tools(
         )
 
     if config.tools.enable_note:
+        # Keep local note tools as baseline memory for current project/session.
         memory_file = str(workspace_dir / ".agent_memory.json")
         tools.append(SessionNoteTool(memory_file=memory_file))
         if include_recall_notes:
             from mini_agent.tools.note_tool import RecallNoteTool
 
             tools.append(RecallNoteTool(memory_file=memory_file))
+
+        memos_cfg = getattr(config, "memos", None)
+        memos_enabled = bool(getattr(memos_cfg, "enabled", False))
+        memos_api_key = str(getattr(memos_cfg, "api_key", "") or "").strip()
+
+        # Add MemOS cloud memory as explicit, separate tools.
+        if memos_enabled and memos_api_key:
+            try:
+                from mini_agent.tools.memos_memory_tool import create_memos_tools_with_context
+
+                memos_tools = create_memos_tools_with_context(
+                    api_key=memos_api_key,
+                    channel=channel,
+                    chat_id=chat_id,
+                    sender_id=sender_id,
+                    agent_id=agent_id,
+                )
+                if not include_recall_notes:
+                    memos_tools = [tool for tool in memos_tools if tool.name != "memos_recall_notes"]
+                tools.extend(memos_tools)
+            except Exception:
+                # Keep local note tools even if MemOS init fails.
+                pass
+
+
+def create_turn_memory_hook(
+    *,
+    config: Config,
+    channel: str | None = None,
+    chat_id: str | None = None,
+    sender_id: str | None = None,
+    agent_id: str | None = None,
+    log: LogFn = None,
+) -> Any | None:
+    """Create session-scoped automatic memory hook when MemOS is enabled."""
+    memos_cfg = getattr(config, "memos", None)
+    if memos_cfg is None:
+        return None
+
+    memos_enabled = bool(getattr(memos_cfg, "enabled", False))
+    memos_api_key = str(getattr(memos_cfg, "api_key", "") or "").strip()
+    if not memos_enabled or not memos_api_key:
+        return None
+
+    if not (bool(getattr(memos_cfg, "auto_recall_enabled", True)) or bool(getattr(memos_cfg, "auto_add_enabled", True))):
+        return None
+
+    try:
+        from mini_agent.tools.memos_memory_tool import MemOSAutoMemoryHook
+
+        hook = MemOSAutoMemoryHook.from_config(
+            api_key=memos_api_key,
+            memos_config=memos_cfg,
+            channel=channel,
+            chat_id=chat_id,
+            sender_id=sender_id,
+            agent_id=agent_id,
+        )
+        _emit(
+            log,
+            "enabled MemOS auto-memory "
+            f"(channel={channel or 'default'}, user_id={hook.user_id}, conversation_id={hook.conversation_id})",
+        )
+        return hook
+    except Exception as exc:
+        _emit(log, f"failed to initialize MemOS auto-memory: {type(exc).__name__}: {exc}")
+        return None
 
 
 def build_session_tools(
@@ -220,6 +292,10 @@ def build_session_tools(
     config: Config,
     workspace_dir: Path,
     include_recall_notes: bool = False,
+    channel: str | None = None,
+    chat_id: str | None = None,
+    sender_id: str | None = None,
+    agent_id: str | None = None,
     extra_tools: list[Tool] | None = None,
     deny_tool_names: set[str] | None = None,
     log: LogFn = None,
@@ -231,6 +307,10 @@ def build_session_tools(
         config=config,
         workspace_dir=workspace_dir,
         include_recall_notes=include_recall_notes,
+        channel=channel,
+        chat_id=chat_id,
+        sender_id=sender_id,
+        agent_id=agent_id,
     )
     if extra_tools:
         tools.extend(extra_tools)

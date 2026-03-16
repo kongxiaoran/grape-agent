@@ -1,0 +1,129 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", "PingFang SC", sans-serif;
+  background: #f3f7f6;
+  color: #12221f;
+}
+
+main {
+  padding: 12px;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0 0 10px 0;
+}
+
+h2 {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #dbe6e3;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.hidden {
+  display: none;
+}
+
+label {
+  display: block;
+  margin-top: 6px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #4a615a;
+}
+
+label.inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+label.inline input[type="checkbox"] {
+  width: auto;
+}
+
+input,
+textarea,
+button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input,
+textarea {
+  border: 1px solid #c8d8d4;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fbfffe;
+}
+
+select {
+  border: 1px solid #c8d8d4;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fbfffe;
+}
+
+input[type="file"] {
+  margin-top: 6px;
+}
+
+textarea[readonly] {
+  font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  background: #f4faf7;
+}
+
+#userInput {
+  min-height: 200px;
+}
+
+#agentOutput {
+  min-height: 360px;
+}
+
+button {
+  margin-top: 8px;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px;
+  background: #0e7a5b;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0b674c;
+}
+
+.status {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #475f58;
+  white-space: pre-wrap;
+}
+
+#suggestion {
+  margin-top: 8px;
+  border: 1px solid #d3e1dd;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  background: #f9fdfb;
+}

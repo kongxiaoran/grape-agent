@@ -119,6 +119,7 @@ class FeishuWebSocketServer:
         )
 
         lark = self.feishu_client.get_sdk()
+        self._configure_sdk_logging(lark)
         domain = lark.LARK_DOMAIN if self.domain == "lark" else lark.FEISHU_DOMAIN
 
         event_dispatcher = (
@@ -132,6 +133,7 @@ class FeishuWebSocketServer:
             app_secret=self.app_secret,
             domain=domain,
             event_handler=event_dispatcher,
+            log_level=lark.LogLevel.ERROR,
         )
 
         if self.install_signal_handlers:
@@ -142,6 +144,32 @@ class FeishuWebSocketServer:
             self._ws_client.start()
         finally:
             self.stop()
+
+    @staticmethod
+    def _configure_sdk_logging(lark_sdk) -> None:
+        """Reduce Lark SDK console noise in interactive CLI mode.
+
+        The SDK defaults to INFO logs like:
+        [Lark] [INFO] connected to wss://...
+        which can break prompt-toolkit input rendering when emitted from a background thread.
+        """
+        try:
+            import logging
+
+            for logger_name in ("Lark", "lark", "lark_oapi"):
+                logger = logging.getLogger(logger_name)
+                logger.setLevel(logging.ERROR)
+                logger.propagate = False
+                for handler in logger.handlers:
+                    try:
+                        handler.setLevel(logging.ERROR)
+                    except Exception:
+                        pass
+            if hasattr(lark_sdk, "logger"):
+                lark_sdk.logger.setLevel(logging.ERROR)
+                lark_sdk.logger.propagate = False
+        except Exception:
+            pass
 
     def stop(self) -> None:
         """Graceful shutdown."""

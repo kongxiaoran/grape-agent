@@ -16,6 +16,7 @@
 
 - `docs/archive/ops/agent-bridge-linux-deploy-cn.md`
 - `docs/DEPLOY_ONEFILE_TENGXUN1_RUNBOOK_CN.md`
+- `docs/09-deploy-ops/packaging-macos-windows-cn.md`
 - `docs/archive/ops/production-guide-cn.md`
 
 建议运行拓扑：

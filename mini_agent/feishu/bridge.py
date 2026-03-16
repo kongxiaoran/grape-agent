@@ -17,7 +17,7 @@ from mini_agent.channels.plugins.feishu.streaming import FeishuChunkStreamer
 from mini_agent.channels.plugins.feishu.threading import resolve_reply_in_thread
 from mini_agent.channels.logging import log_channel_event
 from mini_agent.config import Config, FeishuPolicyConfig
-from mini_agent.runtime_factory import add_workspace_tools, build_runtime_bundle
+from mini_agent.runtime_factory import add_workspace_tools, build_runtime_bundle, create_turn_memory_hook
 from mini_agent.routing import RoutingInput, RoutingResolver
 from mini_agent.session_store import AgentSession, AgentSessionStore
 from mini_agent.tools.mcp_loader import cleanup_mcp_connections
@@ -483,6 +483,9 @@ class FeishuAgentBridge:
                 config=self.agent_config,
                 workspace_dir=workspace_dir,
                 include_recall_notes=True,
+                channel=channel,
+                chat_id=session_id,
+                agent_id=agent_id,
             )
             if self._subagent_orchestrator is not None:
                 session_key = self._session_store.make_key(channel, session_id, agent_id=agent_id)
@@ -494,6 +497,12 @@ class FeishuAgentBridge:
                         SessionsSendTool(self._subagent_orchestrator, session_key),
                     ]
                 )
+            turn_memory_hook = create_turn_memory_hook(
+                config=self.agent_config,
+                channel=channel,
+                chat_id=session_id,
+                agent_id=agent_id,
+            )
 
             return Agent(
                 llm_client=runtime_bundle.llm_client,
@@ -501,6 +510,7 @@ class FeishuAgentBridge:
                 tools=tools,
                 max_steps=self.agent_config.agent.max_steps,
                 workspace_dir=str(workspace_dir),
+                turn_memory_hook=turn_memory_hook,
             )
 
         return await self._session_store.get_or_create(
