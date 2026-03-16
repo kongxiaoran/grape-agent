@@ -10,7 +10,6 @@ on:
         type: choice
         options:
           - grape-agent
-          - all
   push:
     tags:
       - "pyi-v*"
@@ -42,7 +41,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TARGET="${{ github.event.inputs.target || 'grape-agent' }}"
 
           build_one() {
             local output_name="$1"
@@ -60,17 +58,12 @@ jobs:
           }
 
           build_one "grape-agent" "mini_agent/cli.py"
-          if [[ "$TARGET" == "all" ]]; then
-            build_one "grape-agent-feishu" "mini_agent/feishu/server_ws.py"
-            build_one "grape-agent-webterm-bridge" "mini_agent/webterm_bridge/server.py"
-          fi
 
       - name: Build selected binaries (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $target = "${{ github.event.inputs.target || 'grape-agent' }}"
 
           function Build-One([string]$outputName, [string]$entryFile) {
             uv run --python 3.10 --with pyinstaller pyinstaller `
@@ -86,10 +79,6 @@ jobs:
           }
 
           Build-One "grape-agent" "mini_agent/cli.py"
-          if ($target -eq "all") {
-            Build-One "grape-agent-feishu" "mini_agent/feishu/server_ws.py"
-            Build-One "grape-agent-webterm-bridge" "mini_agent/webterm_bridge/server.py"
-          }
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

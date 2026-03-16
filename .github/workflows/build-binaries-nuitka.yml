@@ -9,10 +9,7 @@ on:
         default: "grape-agent"
         type: choice
         options:
-          - all
           - grape-agent
-          - grape-agent-feishu
-          - grape-agent-webterm-bridge
   push:
     tags:
       - "v*"
@@ -44,7 +41,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TARGET="${{ github.event.inputs.target || 'grape-agent' }}"
 
           build_one() {
             local output_name="$1"
@@ -70,22 +66,13 @@ jobs:
               "${entry_file}"
           }
 
-          if [[ "$TARGET" == "all" || "$TARGET" == "grape-agent" ]]; then
-            build_one "grape-agent" "mini_agent/cli.py"
-          fi
-          if [[ "$TARGET" == "all" || "$TARGET" == "grape-agent-feishu" ]]; then
-            build_one "grape-agent-feishu" "mini_agent/feishu/server_ws.py"
-          fi
-          if [[ "$TARGET" == "all" || "$TARGET" == "grape-agent-webterm-bridge" ]]; then
-            build_one "grape-agent-webterm-bridge" "mini_agent/webterm_bridge/server.py"
-          fi
+          build_one "grape-agent" "mini_agent/cli.py"
 
       - name: Build selected binaries (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $target = "${{ github.event.inputs.target || 'grape-agent' }}"
 
           function Build-One([string]$outputName, [string]$entryFile) {
             uv run --python 3.10 --with nuitka python -m nuitka `
@@ -109,15 +96,7 @@ jobs:
               $entryFile
           }
 
-          if ($target -eq "all" -or $target -eq "grape-agent") {
-            Build-One "grape-agent.exe" "mini_agent/cli.py"
-          }
-          if ($target -eq "all" -or $target -eq "grape-agent-feishu") {
-            Build-One "grape-agent-feishu.exe" "mini_agent/feishu/server_ws.py"
-          }
-          if ($target -eq "all" -or $target -eq "grape-agent-webterm-bridge") {
-            Build-One "grape-agent-webterm-bridge.exe" "mini_agent/webterm_bridge/server.py"
-          }
+          Build-One "grape-agent.exe" "mini_agent/cli.py"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
