@@ -35,23 +35,27 @@ class _DummyScheduler:
 
 
 def _build_config(tmp_path):
-    config_path = tmp_path / "config.yaml"
+    config_path = tmp_path / "settings.json"
+    import json
     config_path.write_text(
-        """
-api_key: "test-key"
-gateway:
-  enabled: true
-  host: "127.0.0.1"
-  port: 8765
-  auth:
-    enabled: true
-    token: "secret-token"
-cron:
-  enabled: true
-""",
+        json.dumps({
+            "api_key": "test-key",
+            "gateway": {
+                "enabled": True,
+                "host": "127.0.0.1",
+                "port": 8765,
+                "auth": {
+                    "enabled": True,
+                    "token": "secret-token",
+                },
+            },
+            "cron": {
+                "enabled": True,
+            },
+        }),
         encoding="utf-8",
     )
-    return Config.from_yaml(config_path)
+    return Config.from_json(config_path)
 
 
 @pytest.mark.asyncio

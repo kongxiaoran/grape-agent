@@ -1,10 +1,10 @@
 """Test cases for LLM wrapper client."""
 
 import asyncio
+import json
 from pathlib import Path
 
 import pytest
-import yaml
 
 from grape_agent.llm import LLMClient
 from grape_agent.schema import LLMProvider, Message
@@ -16,9 +16,9 @@ async def test_wrapper_anthropic_provider():
     print("\n=== Testing LLM Wrapper (Anthropic Provider) ===")
 
     # Load config
-    config_path = Path("grape_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/settings.json")
     with open(config_path, encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        config = json.load(f)
 
     # Create client with Anthropic provider
     client = LLMClient(
@@ -63,9 +63,9 @@ async def test_wrapper_openai_provider():
     print("\n=== Testing LLM Wrapper (OpenAI Provider) ===")
 
     # Load config
-    config_path = Path("grape_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/settings.json")
     with open(config_path, encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        config = json.load(f)
 
     # Create client with OpenAI provider
     client = LLMClient(
@@ -109,9 +109,9 @@ async def test_wrapper_default_provider():
     print("\n=== Testing LLM Wrapper (Default Provider) ===")
 
     # Load config
-    config_path = Path("grape_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/settings.json")
     with open(config_path, encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        config = json.load(f)
 
     # Create client without specifying provider (should default to Anthropic)
     client = LLMClient(
@@ -130,9 +130,9 @@ async def test_wrapper_tool_calling():
     print("\n=== Testing LLM Wrapper Tool Calling ===")
 
     # Load config
-    config_path = Path("grape_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/settings.json")
     with open(config_path, encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        config = json.load(f)
 
     # Create client with Anthropic provider
     client = LLMClient(
@@ -202,7 +202,7 @@ async def main():
     print("=" * 80)
     print("Running LLM Wrapper Tests")
     print("=" * 80)
-    print("\nNote: These tests require a valid MiniMax API key in config.yaml")
+    print("\nNote: These tests require a valid MiniMax API key in settings.json")
 
     results = []
 

@@ -18,8 +18,8 @@ async def test_agent_simple_task():
     print("\n=== Testing Agent with Simple File Task ===")
 
     # Load config
-    config_path = Path("grape_agent/config/config.yaml")
-    config = Config.from_yaml(config_path)
+    config_path = Path("grape_agent/config/settings.json")
+    config = Config.from_json(config_path)
 
     # Create temp workspace
     with tempfile.TemporaryDirectory() as workspace_dir:
@@ -100,8 +100,8 @@ async def test_agent_bash_task():
     print("\n=== Testing Agent with Bash Task ===")
 
     # Load config
-    config_path = Path("grape_agent/config/config.yaml")
-    config = Config.from_yaml(config_path)
+    config_path = Path("grape_agent/config/settings.json")
+    config = Config.from_json(config_path)
 
     # Create temp workspace
     with tempfile.TemporaryDirectory() as workspace_dir:
@@ -166,7 +166,7 @@ async def main():
     print("=" * 80)
     print("Running Agent Integration Tests")
     print("=" * 80)
-    print("\nNote: These tests require a valid MiniMax API key in config.yaml")
+    print("\nNote: These tests require a valid MiniMax API key in settings.json")
     print("These tests will actually call the LLM API and may take some time.\n")
 
     # Test simple file task

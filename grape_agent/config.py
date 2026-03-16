@@ -3,10 +3,10 @@
 Provides unified configuration loading and management functionality
 """
 
+import json
 from pathlib import Path
 from typing import Any, Literal
 
-import yaml
 from pydantic import BaseModel, Field
 
 
@@ -316,11 +316,11 @@ class Config(BaseModel):
                 "Configuration file not found. Place settings.json at ~/.grape-agent/config/settings.json "
                 "or use grape_agent/config/settings.json in development mode."
             )
-        return cls.from_yaml(config_path)
+        return cls.from_json(config_path)
 
     @classmethod
-    def from_yaml(cls, config_path: str | Path) -> "Config":
-        """Load configuration from YAML file
+    def from_json(cls, config_path: str | Path) -> "Config":
+        """Load configuration from JSON file
 
         Args:
             config_path: Configuration file path
@@ -338,7 +338,7 @@ class Config(BaseModel):
             raise FileNotFoundError(f"Configuration file does not exist: {config_path}")
 
         with open(config_path, encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+            data = json.load(f)
 
         if not data:
             raise ValueError("Configuration file is empty")
@@ -765,17 +765,12 @@ class Config(BaseModel):
 
         Returns:
             Path to settings.json (prioritizes:
-            ~/.grape-agent/config/settings.json > legacy config.yaml > dev/package settings.json)
+            ~/.grape-agent/config/settings.json > dev/package settings.json)
         """
         # Priority 1: Grape-Agent user config (default)
         user_settings = Path.home() / ".grape-agent" / "config" / "settings.json"
         if user_settings.exists():
             return user_settings
-
-        # Legacy fallback for backward compatibility
-        legacy_path = cls.find_config_file("config.yaml")
-        if legacy_path:
-            return legacy_path
 
         # Development/package settings.json fallback
         dev_settings = Path.cwd() / "grape_agent" / "config" / "settings.json"

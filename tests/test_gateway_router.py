@@ -52,23 +52,28 @@ class _DummyAgent:
         return f"{self.label}:ok"
 
 
-def _build_config(tmp_path, extra: str = "") -> Config:
-    config_path = tmp_path / "config.yaml"
+def _build_config(tmp_path, extra: dict | None = None) -> Config:
+    config_path = tmp_path / "settings.json"
+    import json
+    config_content = {
+        "api_key": "test-key",
+        "gateway": {
+            "enabled": True,
+            "host": "127.0.0.1",
+            "port": 8765,
+            "auth": {
+                "enabled": True,
+                "token": "secret-token",
+            },
+        },
+    }
+    if extra:
+        config_content.update(extra)
     config_path.write_text(
-        f"""
-api_key: "test-key"
-gateway:
-  enabled: true
-  host: "127.0.0.1"
-  port: 8765
-  auth:
-    enabled: true
-    token: "secret-token"
-{extra}
-""",
+        json.dumps(config_content),
         encoding="utf-8",
     )
-    return Config.from_yaml(config_path)
+    return Config.from_json(config_path)
 
 
 def _build_router(cfg: Config, runtime=None, orchestrator=None) -> GatewayRouter:

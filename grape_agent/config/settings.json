@@ -150,5 +150,26 @@
       "enabled": true,
       "token": "CHANGE_ME_TO_A_STRONG_TOKEN"
     }
+  },
+  "memos": {
+    "enabled": false,
+    "api_key": "",
+    "conversation_id": "",
+    "query_prefix": "",
+    "auto_recall_enabled": true,
+    "auto_add_enabled": true,
+    "add_include_assistant": true,
+    "add_async_mode": true,
+    "add_throttle_sec": 0.0,
+    "recall_memory_limit_number": 6,
+    "recall_preference_limit_number": 4,
+    "recall_include_preference": true,
+    "recall_include_tool_memory": false,
+    "recall_tool_memory_limit_number": 4,
+    "recall_max_items": 8,
+    "recall_max_item_chars": 220,
+    "recall_min_relativity": 0.0,
+    "source": "grape-agent",
+    "tags": []
   }
 }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -11,32 +12,39 @@ from grape_agent.feishu.bridge import FeishuAgentBridge
 from grape_agent.feishu.types import FeishuChatType, FeishuIncomingMessage, FeishuMessageType
 
 
-def _write_config(path: Path, content: str) -> Path:
-    path.write_text(content, encoding="utf-8")
+def _write_config(path: Path, content: dict) -> Path:
+    path.write_text(json.dumps(content), encoding="utf-8")
     return path
 
 
 def _build_config(tmp_path: Path) -> Config:
     config_path = _write_config(
-        tmp_path / "config.yaml",
-        """
-api_key: "test-key"
-agents:
-  default_agent_id: "main"
-  profiles:
-    reviewer:
-      workspace: "./workspace-reviewer"
-      model: "GLM-5-reviewer"
-routing:
-  default_agent_id: "main"
-  rules:
-    - channel: "feishu"
-      chat_type: "group"
-      chat_id: "oc_group_1"
-      agent_id: "reviewer"
-""",
+        tmp_path / "settings.json",
+        {
+            "api_key": "test-key",
+            "agents": {
+                "default_agent_id": "main",
+                "profiles": {
+                    "reviewer": {
+                        "workspace": "./workspace-reviewer",
+                        "model": "GLM-5-reviewer",
+                    },
+                },
+            },
+            "routing": {
+                "default_agent_id": "main",
+                "rules": [
+                    {
+                        "channel": "feishu",
+                        "chat_type": "group",
+                        "chat_id": "oc_group_1",
+                        "agent_id": "reviewer",
+                    },
+                ],
+            },
+        },
     )
-    return Config.from_yaml(config_path)
+    return Config.from_json(config_path)
 
 
 class _DummyFeishuClient:

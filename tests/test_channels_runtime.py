@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -34,32 +35,33 @@ class _DummyPlugin:
         return {"enabled": True, "running": self.started and not self.stopped, "plugin": self.id}
 
 
-def _write_config(path: Path, content: str) -> Path:
-    path.write_text(content, encoding="utf-8")
+def _write_config(path: Path, content: dict) -> Path:
+    path.write_text(json.dumps(content), encoding="utf-8")
     return path
 
 
 def _build_config(tmp_path: Path, feishu_enabled: bool) -> Config:
-    accounts_block = ""
+    config_content = {
+        "api_key": "test-key",
+        "channels": {
+            "feishu": {
+                "enabled": feishu_enabled,
+            },
+        },
+    }
     if feishu_enabled:
-        accounts_block = """
-    default_account: "main"
-    accounts:
-      main:
-        app_id: "cli_main"
-        app_secret: "secret-main"
-"""
+        config_content["channels"]["feishu"]["default_account"] = "main"
+        config_content["channels"]["feishu"]["accounts"] = {
+            "main": {
+                "app_id": "cli_main",
+                "app_secret": "secret-main",
+            },
+        }
     config_path = _write_config(
-        tmp_path / "config.yaml",
-        f"""
-api_key: "test-key"
-channels:
-  feishu:
-    enabled: {"true" if feishu_enabled else "false"}
-{accounts_block}
-""",
+        tmp_path / "settings.json",
+        config_content,
     )
-    return Config.from_yaml(config_path)
+    return Config.from_json(config_path)
 
 
 def test_registry_prevents_duplicate_channel():
@@ -81,7 +83,7 @@ async def test_runtime_start_send_stop(tmp_path):
         return plugin
 
     registry.register("feishu", _factory)
-    runtime = ChannelRuntime(registry=registry, context=ChannelContext(config=cfg, config_path=tmp_path / "config.yaml"))
+    runtime = ChannelRuntime(registry=registry, context=ChannelContext(config=cfg, config_path=tmp_path / "settings.json"))
 
     await runtime.start()
     assert "plugin" in holder
@@ -110,7 +112,7 @@ async def test_runtime_skips_disabled_channel(tmp_path):
         return _DummyPlugin()
 
     registry.register("feishu", _factory)
-    runtime = ChannelRuntime(registry=registry, context=ChannelContext(config=cfg, config_path=tmp_path / "config.yaml"))
+    runtime = ChannelRuntime(registry=registry, context=ChannelContext(config=cfg, config_path=tmp_path / "settings.json"))
 
     await runtime.start()
     assert created["count"] == 0

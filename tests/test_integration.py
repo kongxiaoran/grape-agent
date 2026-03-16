@@ -27,11 +27,11 @@ async def test_basic_agent_usage():
     print("=" * 80)
 
     # Load configuration
-    config_path = Path("grape_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/settings.json")
     if not config_path.exists():
-        pytest.skip("config.yaml not found")
+        pytest.skip("settings.json not found")
 
-    config = Config.from_yaml(config_path)
+    config = Config.from_json(config_path)
 
     # Check API key
     if not config.llm.api_key or config.llm.api_key == "YOUR_MINIMAX_API_KEY_HERE":
@@ -131,11 +131,11 @@ async def test_session_memory_demo():
     print("=" * 80)
 
     # Load config
-    config_path = Path("grape_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/settings.json")
     if not config_path.exists():
-        pytest.skip("config.yaml not found")
+        pytest.skip("settings.json not found")
 
-    config = Config.from_yaml(config_path)
+    config = Config.from_json(config_path)
 
     # Check API key
     if not config.llm.api_key or config.llm.api_key == "YOUR_MINIMAX_API_KEY_HERE":
@@ -246,7 +246,7 @@ async def main():
     print("=" * 80)
     print("Running Integration Tests")
     print("=" * 80)
-    print("\nNote: These tests require a valid MiniMax API key in config.yaml")
+    print("\nNote: These tests require a valid MiniMax API key in settings.json")
     print("These tests will actually call the LLM API and may take some time.\n")
 
     try:

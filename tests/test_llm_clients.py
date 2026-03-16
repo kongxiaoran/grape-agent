@@ -5,10 +5,10 @@ without going through the wrapper layer.
 """
 
 import asyncio
+import json
 from pathlib import Path
 
 import pytest
-import yaml
 
 from grape_agent.llm import AnthropicClient, OpenAIClient
 from grape_agent.retry import RetryConfig
@@ -16,10 +16,10 @@ from grape_agent.schema import Message
 
 
 def load_config():
-    """Load config from config.yaml."""
-    config_path = Path("grape_agent/config/config.yaml")
+    """Load config from settings.json."""
+    config_path = Path("grape_agent/config/settings.json")
     with open(config_path, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        return json.load(f)
 
 
 @pytest.mark.asyncio
@@ -309,7 +309,7 @@ async def main():
     print("=" * 80)
     print("Running LLM Client Tests")
     print("=" * 80)
-    print("\nNote: These tests require a valid MiniMax API key in config.yaml")
+    print("\nNote: These tests require a valid MiniMax API key in settings.json")
 
     results = []
 

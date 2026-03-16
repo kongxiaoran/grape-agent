@@ -1,5 +1,6 @@
 """Tests for Feishu channel config parsing."""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -7,19 +8,17 @@ import pytest
 from grape_agent.config import Config
 
 
-def _write_config(path: Path, content: str) -> Path:
-    path.write_text(content, encoding="utf-8")
+def _write_config(path: Path, content: dict) -> Path:
+    path.write_text(json.dumps(content), encoding="utf-8")
     return path
 
 
 def test_feishu_config_defaults(tmp_path):
     config_path = _write_config(
-        tmp_path / "config.yaml",
-        """
-api_key: "test-key"
-""",
+        tmp_path / "settings.json",
+        {"api_key": "test-key"},
     )
-    cfg = Config.from_yaml(config_path)
+    cfg = Config.from_json(config_path)
     assert cfg.channels.feishu.enabled is False
     assert cfg.channels.feishu.default_account == "main"
     assert cfg.channels.feishu.accounts == {}
@@ -35,35 +34,42 @@ api_key: "test-key"
 
 def test_feishu_config_new_structure_custom_values(tmp_path):
     config_path = _write_config(
-        tmp_path / "config.yaml",
-        """
-api_key: "test-key"
-channels:
-  feishu:
-    enabled: true
-    default_account: "ops"
-    accounts:
-      main:
-        app_id: "cli_main"
-        app_secret: "secret-main"
-      ops:
-        app_id: "cli_ops"
-        app_secret: "secret-ops"
-        domain: "lark"
-    render_mode: "card"
-    policy:
-      require_mention: false
-      reply_in_thread: false
-      group_session_scope: "topic"
-    streaming:
-      enabled: true
-      chunk_size: 480
-      interval_ms: 60
-      reply_all_chunks: true
-      progress_ping_sec: 9
-""",
+        tmp_path / "settings.json",
+        {
+            "api_key": "test-key",
+            "channels": {
+                "feishu": {
+                    "enabled": True,
+                    "default_account": "ops",
+                    "accounts": {
+                        "main": {
+                            "app_id": "cli_main",
+                            "app_secret": "secret-main",
+                        },
+                        "ops": {
+                            "app_id": "cli_ops",
+                            "app_secret": "secret-ops",
+                            "domain": "lark",
+                        },
+                    },
+                    "render_mode": "card",
+                    "policy": {
+                        "require_mention": False,
+                        "reply_in_thread": False,
+                        "group_session_scope": "topic",
+                    },
+                    "streaming": {
+                        "enabled": True,
+                        "chunk_size": 480,
+                        "interval_ms": 60,
+                        "reply_all_chunks": True,
+                        "progress_ping_sec": 9,
+                    },
+                },
+            },
+        },
     )
-    cfg = Config.from_yaml(config_path)
+    cfg = Config.from_json(config_path)
     assert cfg.channels.feishu.enabled is True
     assert cfg.channels.feishu.default_account == "ops"
     assert sorted(cfg.channels.feishu.accounts.keys()) == ["main", "ops"]
@@ -75,46 +81,53 @@ channels:
 
 def test_feishu_enabled_requires_accounts(tmp_path):
     config_path = _write_config(
-        tmp_path / "config.yaml",
-        """
-api_key: "test-key"
-channels:
-  feishu:
-    enabled: true
-""",
+        tmp_path / "settings.json",
+        {
+            "api_key": "test-key",
+            "channels": {
+                "feishu": {
+                    "enabled": True,
+                },
+            },
+        },
     )
     with pytest.raises(ValueError, match="channels.feishu.accounts is required"):
-        Config.from_yaml(config_path)
+        Config.from_json(config_path)
 
 
 def test_feishu_default_account_must_exist(tmp_path):
     config_path = _write_config(
-        tmp_path / "config.yaml",
-        """
-api_key: "test-key"
-channels:
-  feishu:
-    enabled: true
-    default_account: "ops"
-    accounts:
-      main:
-        app_id: "cli_main"
-        app_secret: "secret-main"
-""",
+        tmp_path / "settings.json",
+        {
+            "api_key": "test-key",
+            "channels": {
+                "feishu": {
+                    "enabled": True,
+                    "default_account": "ops",
+                    "accounts": {
+                        "main": {
+                            "app_id": "cli_main",
+                            "app_secret": "secret-main",
+                        },
+                    },
+                },
+            },
+        },
     )
     with pytest.raises(ValueError, match="channels.feishu.default_account must exist"):
-        Config.from_yaml(config_path)
+        Config.from_json(config_path)
 
 
 def test_legacy_top_level_feishu_rejected(tmp_path):
     config_path = _write_config(
-        tmp_path / "config.yaml",
-        """
-api_key: "test-key"
-feishu:
-  enabled: true
-""",
+        tmp_path / "settings.json",
+        {
+            "api_key": "test-key",
+            "feishu": {
+                "enabled": True,
+            },
+        },
     )
 
     with pytest.raises(ValueError, match="top-level 'feishu' config is not supported"):
-        Config.from_yaml(config_path)
+        Config.from_json(config_path)

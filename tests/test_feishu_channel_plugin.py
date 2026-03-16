@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -11,31 +12,36 @@ from grape_agent.channels.types import ChannelContext
 from grape_agent.config import Config
 
 
-def _write_config(path: Path, content: str) -> Path:
-    path.write_text(content, encoding="utf-8")
+def _write_config(path: Path, content: dict) -> Path:
+    path.write_text(json.dumps(content), encoding="utf-8")
     return path
 
 
 def _build_config(tmp_path: Path, enabled: bool = True) -> Config:
     config_path = _write_config(
-        tmp_path / "config.yaml",
-        f"""
-api_key: "test-key"
-channels:
-  feishu:
-    enabled: {"true" if enabled else "false"}
-    default_account: "main"
-    accounts:
-      main:
-        app_id: "cli_main"
-        app_secret: "secret-main"
-      ops:
-        app_id: "cli_ops"
-        app_secret: "secret-ops"
-        domain: "lark"
-""",
+        tmp_path / "settings.json",
+        {
+            "api_key": "test-key",
+            "channels": {
+                "feishu": {
+                    "enabled": enabled,
+                    "default_account": "main",
+                    "accounts": {
+                        "main": {
+                            "app_id": "cli_main",
+                            "app_secret": "secret-main",
+                        },
+                        "ops": {
+                            "app_id": "cli_ops",
+                            "app_secret": "secret-ops",
+                            "domain": "lark",
+                        },
+                    },
+                },
+            },
+        },
     )
-    return Config.from_yaml(config_path)
+    return Config.from_json(config_path)
 
 
 @pytest.mark.asyncio
@@ -82,7 +88,7 @@ async def test_plugin_start_multi_account_and_send(monkeypatch, tmp_path):
 
     monkeypatch.setattr(feishu_plugin_mod, "EmbeddedFeishuRunner", _DummyRunner)
     plugin = FeishuChannelPlugin()
-    await plugin.start(ChannelContext(config=cfg, config_path=tmp_path / "config.yaml"))
+    await plugin.start(ChannelContext(config=cfg, config_path=tmp_path / "settings.json"))
 
     send_main = await plugin.send(target="chat_1", content="hello-main")
     send_ops = await plugin.send(target="chat_2", content="hello-ops", account_id="ops")
@@ -139,7 +145,7 @@ async def test_plugin_send_unknown_account(monkeypatch, tmp_path):
 
     monkeypatch.setattr(feishu_plugin_mod, "EmbeddedFeishuRunner", _DummyRunner)
     plugin = FeishuChannelPlugin()
-    await plugin.start(ChannelContext(config=cfg, config_path=tmp_path / "config.yaml"))
+    await plugin.start(ChannelContext(config=cfg, config_path=tmp_path / "settings.json"))
     res = await plugin.send(target="chat_1", content="hello", account_id="missing")
     assert res["ok"] is False
     assert "unknown feishu account" in res["error"]

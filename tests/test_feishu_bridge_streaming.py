@@ -14,8 +14,8 @@ from grape_agent.feishu.bridge import FeishuAgentBridge
 from grape_agent.feishu.types import FeishuChatType, FeishuIncomingMessage, FeishuMessageType, FeishuSendResult
 
 
-def _write_config(path: Path, content: str) -> Path:
-    path.write_text(content, encoding="utf-8")
+def _write_config(path: Path, content: dict) -> Path:
+    path.write_text(json.dumps(content), encoding="utf-8")
     return path
 
 
@@ -32,30 +32,35 @@ def _build_config(
     progress_card_tail_lines: int = 5,
 ) -> Config:
     config_path = _write_config(
-        tmp_path / "config.yaml",
-        f"""
-api_key: "test-key"
-channels:
-  feishu:
-    enabled: true
-    default_account: "main"
-    accounts:
-      main:
-        app_id: "cli_test"
-        app_secret: "secret"
-    render_mode: "raw"
-    streaming:
-      enabled: {"true" if streaming_enabled else "false"}
-      chunk_size: {chunk_size}
-      interval_ms: {interval_ms}
-      reply_all_chunks: {"true" if reply_all_chunks else "false"}
-      progress_card_enabled: {"true" if progress_card_enabled else "false"}
-      progress_card_start_sec: {progress_card_start_sec}
-      progress_card_update_sec: {progress_card_update_sec}
-      progress_card_tail_lines: {progress_card_tail_lines}
-""",
+        tmp_path / "settings.json",
+        {
+            "api_key": "test-key",
+            "channels": {
+                "feishu": {
+                    "enabled": True,
+                    "default_account": "main",
+                    "accounts": {
+                        "main": {
+                            "app_id": "cli_test",
+                            "app_secret": "secret",
+                        },
+                    },
+                    "render_mode": "raw",
+                    "streaming": {
+                        "enabled": streaming_enabled,
+                        "chunk_size": chunk_size,
+                        "interval_ms": interval_ms,
+                        "reply_all_chunks": reply_all_chunks,
+                        "progress_card_enabled": progress_card_enabled,
+                        "progress_card_start_sec": progress_card_start_sec,
+                        "progress_card_update_sec": progress_card_update_sec,
+                        "progress_card_tail_lines": progress_card_tail_lines,
+                    },
+                },
+            },
+        },
     )
-    return Config.from_yaml(config_path)
+    return Config.from_json(config_path)
 
 
 def _build_inbound() -> FeishuIncomingMessage:
