@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    timeout-minutes: 180
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
@@ -45,7 +45,7 @@ jobs:
           build_one() {
             local output_name="$1"
             local entry_file="$2"
-            uv run --python 3.10 --with nuitka python -m nuitka \
+            uv run --python 3.10 --with "nuitka[onefile]" --with zstandard python -m nuitka \
               --onefile \
               --assume-yes-for-downloads \
               --follow-imports \
@@ -54,6 +54,7 @@ jobs:
               --include-package=memos \
               --include-package-data=memos \
               --include-package=lark_oapi \
+              --enable-plugin=dill-compat \
               --noinclude-setuptools-mode=nofollow \
               --noinclude-pytest-mode=nofollow \
               --noinclude-unittest-mode=nofollow \
@@ -61,6 +62,8 @@ jobs:
               --noinclude-IPython-mode=nofollow \
               --noinclude-dask-mode=nofollow \
               --noinclude-numba-mode=nofollow \
+              --lto=no \
+              --jobs=4 \
               --output-dir=dist \
               --output-filename="${output_name}" \
               "${entry_file}"
@@ -75,7 +78,7 @@ jobs:
           $ErrorActionPreference = "Stop"
 
           function Build-One([string]$outputName, [string]$entryFile) {
-            uv run --python 3.10 --with nuitka python -m nuitka `
+            uv run --python 3.10 --with "nuitka[onefile]" --with zstandard python -m nuitka `
               --onefile `
               --assume-yes-for-downloads `
               --follow-imports `
@@ -84,6 +87,7 @@ jobs:
               --include-package=memos `
               --include-package-data=memos `
               --include-package=lark_oapi `
+              --enable-plugin=dill-compat `
               --noinclude-setuptools-mode=nofollow `
               --noinclude-pytest-mode=nofollow `
               --noinclude-unittest-mode=nofollow `
@@ -91,6 +95,8 @@ jobs:
               --noinclude-IPython-mode=nofollow `
               --noinclude-dask-mode=nofollow `
               --noinclude-numba-mode=nofollow `
+              --lto=no `
+              --jobs=4 `
               --output-dir=dist `
               --output-filename=$outputName `
               $entryFile
