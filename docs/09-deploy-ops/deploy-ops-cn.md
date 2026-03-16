@@ -40,7 +40,7 @@
 
 ## 代码行号引用
 
-- 默认配置搜索顺序（`~/.grape/settings.json` 优先）  
+- 默认配置搜索顺序（`~/.grape-agent/config/settings.json` 优先）  
   `grape_agent/config.py:704`, `grape_agent/config.py:712`
 - 启动入口与主循环  
   `grape_agent/cli.py:1302`, `grape_agent/cli.py:1327`

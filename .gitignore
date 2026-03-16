@@ -79,3 +79,7 @@ docs/private/
 任务完成总结.md
 公司报告生成演示.md
 项目分析总结.md
+
+# Editor/Tool temporary files
+.memos/
+.trae/

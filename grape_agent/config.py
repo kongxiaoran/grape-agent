@@ -313,7 +313,7 @@ class Config(BaseModel):
         config_path = cls.get_default_config_path()
         if not config_path.exists():
             raise FileNotFoundError(
-                "Configuration file not found. Place settings.json at ~/.grape/settings.json "
+                "Configuration file not found. Place settings.json at ~/.grape-agent/config/settings.json "
                 "or use grape_agent/config/settings.json in development mode."
             )
         return cls.from_yaml(config_path)
@@ -733,9 +733,8 @@ class Config(BaseModel):
 
         Search for config file in the following order of priority:
         1) grape_agent/config/{filename} in current directory (development mode)
-        2) ~/.grape/{filename} in user home directory (Grape default)
-        3) ~/.grape-agent/config/{filename} in user home directory (legacy fallback)
-        4) {package}/grape_agent/config/{filename} in package installation directory
+        2) ~/.grape-agent/config/{filename} in user home directory (default)
+        3) {package}/grape_agent/config/{filename} in package installation directory
 
         Args:
             filename: Configuration file name (e.g., "settings.json", "mcp.json", "system_prompt.md")
@@ -748,17 +747,12 @@ class Config(BaseModel):
         if dev_config.exists():
             return dev_config
 
-        # Priority 2: User config directory
-        grape_user_config = Path.home() / ".grape" / filename
+        # Priority 2: User config directory (default)
+        grape_user_config = Path.home() / ".grape-agent" / "config" / filename
         if grape_user_config.exists():
             return grape_user_config
 
-        # Priority 3: Legacy user config directory
-        legacy_user_config = Path.home() / ".grape-agent" / "config" / filename
-        if legacy_user_config.exists():
-            return legacy_user_config
-
-        # Priority 4: Package installation directory's config/ subdirectory
+        # Priority 3: Package installation directory's config/ subdirectory
         package_config = cls.get_package_dir() / "config" / filename
         if package_config.exists():
             return package_config
@@ -771,10 +765,10 @@ class Config(BaseModel):
 
         Returns:
             Path to settings.json (prioritizes:
-            ~/.grape/settings.json > legacy config.yaml > dev/package settings.json)
+            ~/.grape-agent/config/settings.json > legacy config.yaml > dev/package settings.json)
         """
-        # Priority 1: Grape user config (new default)
-        user_settings = Path.home() / ".grape" / "settings.json"
+        # Priority 1: Grape-Agent user config (default)
+        user_settings = Path.home() / ".grape-agent" / "config" / "settings.json"
         if user_settings.exists():
             return user_settings
 

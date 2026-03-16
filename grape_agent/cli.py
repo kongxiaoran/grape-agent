@@ -28,7 +28,6 @@ from typing import List
 from uuid import uuid4
 
 from prompt_toolkit import PromptSession
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import Completer, Completion, WordCompleter
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
@@ -681,7 +680,7 @@ def resolve_cli_user_id(user_id_override: str | None = None) -> str:
     Priority:
     1) --user-id
     2) GRAPE_USER_ID env var
-    3) ~/.grape/user_id persisted value (auto-created if missing)
+    3) ~/.grape-agent/user_id persisted value (auto-created if missing)
     """
     cli_user = _normalize_user_id(user_id_override)
     if cli_user:
@@ -691,7 +690,7 @@ def resolve_cli_user_id(user_id_override: str | None = None) -> str:
     if env_user:
         return env_user
 
-    user_id_file = Path.home() / ".grape" / "user_id"
+    user_id_file = Path.home() / ".grape-agent" / "user_id"
     try:
         if user_id_file.exists():
             persisted = _normalize_user_id(user_id_file.read_text(encoding="utf-8"))
@@ -867,16 +866,15 @@ async def run_agent(
         print()
         print(f"{Colors.BRIGHT_CYAN}📦 Configuration Search Path:{Colors.RESET}")
         print(f"  {Colors.DIM}1) grape_agent/config/settings.json{Colors.RESET} (development)")
-        print(f"  {Colors.DIM}2) ~/.grape/settings.json{Colors.RESET} (user, recommended)")
+        print(f"  {Colors.DIM}2) ~/.grape-agent/config/settings.json{Colors.RESET} (user, recommended)")
         print(f"  {Colors.DIM}3) <package>/config/settings.json{Colors.RESET} (installed)")
-        print(f"  {Colors.DIM}4) ~/.grape-agent/config/config.yaml{Colors.RESET} (legacy fallback)")
         print()
         print(f"{Colors.BRIGHT_YELLOW}📝 Manual Setup:{Colors.RESET}")
-        user_config_dir = Path.home() / ".grape"
+        user_config_dir = Path.home() / ".grape-agent"
         example_config = Config.get_package_dir() / "config" / "settings.json"
-        print(f"  {Colors.DIM}mkdir -p {user_config_dir}{Colors.RESET}")
-        print(f"  {Colors.DIM}cp {example_config} {user_config_dir}/settings.json{Colors.RESET}")
-        print(f"  {Colors.DIM}# Then edit {user_config_dir}/settings.json to add your API Key{Colors.RESET}")
+        print(f"  {Colors.DIM}mkdir -p {user_config_dir}/config{Colors.RESET}")
+        print(f"  {Colors.DIM}cp {example_config} {user_config_dir}/config/settings.json{Colors.RESET}")
+        print(f"  {Colors.DIM}# Then edit {user_config_dir}/config/settings.json to add your API Key{Colors.RESET}")
         print()
         return
 
@@ -1193,7 +1191,6 @@ async def run_agent(
         history_file.parent.mkdir(parents=True, exist_ok=True)
         session = PromptSession(
             history=FileHistory(str(history_file)),
-            auto_suggest=AutoSuggestFromHistory(),
             completer=command_completer,
             style=prompt_style,
             key_bindings=kb,

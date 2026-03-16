@@ -22,7 +22,7 @@ def test_resolve_cli_user_id_falls_back_to_env(monkeypatch, tmp_path: Path):
 def test_resolve_cli_user_id_reads_persisted_value(monkeypatch, tmp_path: Path):
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.delenv("GRAPE_USER_ID", raising=False)
-    user_file = tmp_path / ".grape" / "user_id"
+    user_file = tmp_path / ".grape-agent" / "user_id"
     user_file.parent.mkdir(parents=True, exist_ok=True)
     user_file.write_text("persisted-user\n", encoding="utf-8")
 
@@ -37,6 +37,6 @@ def test_resolve_cli_user_id_generates_and_persists(monkeypatch, tmp_path: Path)
     value = resolve_cli_user_id(None)
     assert value.startswith("u_")
 
-    user_file = tmp_path / ".grape" / "user_id"
+    user_file = tmp_path / ".grape-agent" / "user_id"
     assert user_file.exists()
     assert user_file.read_text(encoding="utf-8").strip() == value

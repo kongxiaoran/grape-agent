@@ -68,11 +68,11 @@ uv sync
 ### 2) 配置
 
 ```bash
-mkdir -p ~/.grape
-cp grape_agent/config/settings.json ~/.grape/settings.json
+mkdir -p ~/.grape-agent/config
+cp grape_agent/config/settings.json ~/.grape-agent/config/settings.json
 ```
 
-编辑 `~/.grape/settings.json`：
+编辑 `~/.grape-agent/config/settings.json`：
 
 ```json
 {

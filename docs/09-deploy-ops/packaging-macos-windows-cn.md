@@ -43,8 +43,8 @@ uv run --with nuitka python -m nuitka --version
 
 配置文件建议放用户目录，避免升级时覆盖：
 
-- macOS: `~/.grape/settings.json`
-- Windows: `%USERPROFILE%\\.grape\\settings.json`
+- macOS: `~/.grape-agent/config/settings.json`
+- Windows: `%USERPROFILE%\\.grape-agent\\config\\settings.json`
 
 ## 4. macOS 本地打包（Nuitka）
 

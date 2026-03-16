@@ -264,7 +264,7 @@ def parse_args() -> argparse.Namespace:
             "Examples:\n"
             "  grape-agent-feishu --app-id cli_xxx --app-secret xxx\n"
             "  grape-agent-feishu --app-id cli_xxx --app-secret xxx --domain lark\n"
-            "  grape-agent-feishu --app-id cli_xxx --app-secret xxx --config ~/.grape/settings.json"
+            "  grape-agent-feishu --app-id cli_xxx --app-secret xxx --config ~/.grape-agent/config/settings.json"
         ),
     )
 

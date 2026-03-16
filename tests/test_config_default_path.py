@@ -5,10 +5,10 @@ from pathlib import Path
 from grape_agent.config import Config
 
 
-def test_default_config_prefers_grape_user_settings(tmp_path, monkeypatch):
+def test_default_config_prefers_grape_agent_user_settings(tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir(parents=True)
-    grape_dir = home / ".grape"
+    grape_dir = home / ".grape-agent" / "config"
     grape_dir.mkdir(parents=True)
     settings = grape_dir / "settings.json"
     settings.write_text('{"api_key":"k"}', encoding="utf-8")

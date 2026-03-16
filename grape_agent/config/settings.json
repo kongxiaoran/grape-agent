@@ -95,7 +95,7 @@
   },
   "cron": {
     "enabled": false,
-    "store_path": "~/.grape/cron/jobs.json",
+    "store_path": "~/.grape-agent/cron/jobs.json",
     "poll_interval_sec": 5.0,
     "max_concurrency": 2,
     "default_timeout_sec": 300
@@ -113,7 +113,7 @@
     "command_wrap_markers": true,
     "command_require_confirm": true,
     "auto_execute_low_risk": false,
-    "profile_path": "~/.grape/webterm_profiles.yaml",
+    "profile_path": "~/.grape-agent/config/webterm_profiles.yaml",
     "command_allowlist": [
       "grep",
       "tail",

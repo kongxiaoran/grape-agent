@@ -68,11 +68,11 @@ uv sync
 ### 2) Configure
 
 ```bash
-mkdir -p ~/.grape
-cp grape_agent/config/settings.json ~/.grape/settings.json
+mkdir -p ~/.grape-agent/config
+cp grape_agent/config/settings.json ~/.grape-agent/config/settings.json
 ```
 
-Edit `~/.grape/settings.json`:
+Edit `~/.grape-agent/config/settings.json`:
 
 ```json
 {
