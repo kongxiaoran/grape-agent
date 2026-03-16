@@ -22,9 +22,9 @@
 
 根据 `pyproject.toml` 的脚本入口：
 
-- `grape-agent = mini_agent.cli:main`
-- `grape-agent-feishu = mini_agent.feishu.server_ws:main`
-- `grape-agent-webterm-bridge = mini_agent.webterm_bridge.server:main`
+- `grape-agent = grape_agent.cli:main`
+- `grape-agent-feishu = grape_agent.feishu.server_ws:main`
+- `grape-agent-webterm-bridge = grape_agent.webterm_bridge.server:main`
 
 建议生成 3 个二进制：
 
@@ -56,31 +56,31 @@ uv run --with nuitka python -m nuitka \
   --onefile \
   --assume-yes-for-downloads \
   --follow-imports \
-  --include-package=mini_agent \
-  --include-package-data=mini_agent \
+  --include-package=grape_agent \
+  --include-package-data=grape_agent \
   --output-dir=dist \
   --output-filename=grape-agent \
-  mini_agent/cli.py
+  grape_agent/cli.py
 
 uv run --with nuitka python -m nuitka \
   --onefile \
   --assume-yes-for-downloads \
   --follow-imports \
-  --include-package=mini_agent \
-  --include-package-data=mini_agent \
+  --include-package=grape_agent \
+  --include-package-data=grape_agent \
   --output-dir=dist \
   --output-filename=grape-agent-feishu \
-  mini_agent/feishu/server_ws.py
+  grape_agent/feishu/server_ws.py
 
 uv run --with nuitka python -m nuitka \
   --onefile \
   --assume-yes-for-downloads \
   --follow-imports \
-  --include-package=mini_agent \
-  --include-package-data=mini_agent \
+  --include-package=grape_agent \
+  --include-package-data=grape_agent \
   --output-dir=dist \
   --output-filename=grape-agent-webterm-bridge \
-  mini_agent/webterm_bridge/server.py
+  grape_agent/webterm_bridge/server.py
 
 ./dist/grape-agent --help
 ./dist/grape-agent-feishu --help
@@ -105,31 +105,31 @@ uv run --with nuitka python -m nuitka `
   --onefile `
   --assume-yes-for-downloads `
   --follow-imports `
-  --include-package=mini_agent `
-  --include-package-data=mini_agent `
+  --include-package=grape_agent `
+  --include-package-data=grape_agent `
   --output-dir=dist `
   --output-filename=grape-agent.exe `
-  mini_agent\cli.py
+  grape_agent\cli.py
 
 uv run --with nuitka python -m nuitka `
   --onefile `
   --assume-yes-for-downloads `
   --follow-imports `
-  --include-package=mini_agent `
-  --include-package-data=mini_agent `
+  --include-package=grape_agent `
+  --include-package-data=grape_agent `
   --output-dir=dist `
   --output-filename=grape-agent-feishu.exe `
-  mini_agent\feishu\server_ws.py
+  grape_agent\feishu\server_ws.py
 
 uv run --with nuitka python -m nuitka `
   --onefile `
   --assume-yes-for-downloads `
   --follow-imports `
-  --include-package=mini_agent `
-  --include-package-data=mini_agent `
+  --include-package=grape_agent `
+  --include-package-data=grape_agent `
   --output-dir=dist `
   --output-filename=grape-agent-webterm-bridge.exe `
-  mini_agent\webterm_bridge\server.py
+  grape_agent\webterm_bridge\server.py
 
 .\dist\grape-agent.exe --help
 ```
@@ -172,16 +172,16 @@ jobs:
       - name: Build (Unix shell)
         if: runner.os != 'Windows'
         run: |
-          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=mini_agent --include-package-data=mini_agent --output-dir=dist --output-filename=grape-agent mini_agent/cli.py
-          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=mini_agent --include-package-data=mini_agent --output-dir=dist --output-filename=grape-agent-feishu mini_agent/feishu/server_ws.py
-          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=mini_agent --include-package-data=mini_agent --output-dir=dist --output-filename=grape-agent-webterm-bridge mini_agent/webterm_bridge/server.py
+          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=grape_agent --include-package-data=grape_agent --output-dir=dist --output-filename=grape-agent grape_agent/cli.py
+          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=grape_agent --include-package-data=grape_agent --output-dir=dist --output-filename=grape-agent-feishu grape_agent/feishu/server_ws.py
+          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=grape_agent --include-package-data=grape_agent --output-dir=dist --output-filename=grape-agent-webterm-bridge grape_agent/webterm_bridge/server.py
       - name: Build (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=mini_agent --include-package-data=mini_agent --output-dir=dist --output-filename=grape-agent.exe mini_agent/cli.py
-          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=mini_agent --include-package-data=mini_agent --output-dir=dist --output-filename=grape-agent-feishu.exe mini_agent/feishu/server_ws.py
-          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=mini_agent --include-package-data=mini_agent --output-dir=dist --output-filename=grape-agent-webterm-bridge.exe mini_agent/webterm_bridge/server.py
+          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=grape_agent --include-package-data=grape_agent --output-dir=dist --output-filename=grape-agent.exe grape_agent/cli.py
+          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=grape_agent --include-package-data=grape_agent --output-dir=dist --output-filename=grape-agent-feishu.exe grape_agent/feishu/server_ws.py
+          uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=grape_agent --include-package-data=grape_agent --output-dir=dist --output-filename=grape-agent-webterm-bridge.exe grape_agent/webterm_bridge/server.py
       - uses: actions/upload-artifact@v4
         with:
           name: grape-agent-${{ matrix.os }}
@@ -204,9 +204,9 @@ cd /Users/kxr/learning/Mini-Agent
 uv sync
 rm -rf build dist
 
-uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=mini_agent --include-package-data=mini_agent --output-dir=dist --output-filename=grape-agent mini_agent/cli.py
-uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=mini_agent --include-package-data=mini_agent --output-dir=dist --output-filename=grape-agent-feishu mini_agent/feishu/server_ws.py
-uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=mini_agent --include-package-data=mini_agent --output-dir=dist --output-filename=grape-agent-webterm-bridge mini_agent/webterm_bridge/server.py
+uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=grape_agent --include-package-data=grape_agent --output-dir=dist --output-filename=grape-agent grape_agent/cli.py
+uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=grape_agent --include-package-data=grape_agent --output-dir=dist --output-filename=grape-agent-feishu grape_agent/feishu/server_ws.py
+uv run --with nuitka python -m nuitka --onefile --assume-yes-for-downloads --follow-imports --include-package=grape_agent --include-package-data=grape_agent --output-dir=dist --output-filename=grape-agent-webterm-bridge grape_agent/webterm_bridge/server.py
 
 ./dist/grape-agent --help
 ./dist/grape-agent-feishu --help

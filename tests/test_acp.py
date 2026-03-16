@@ -4,10 +4,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from mini_agent.acp import MiniMaxACPAgent
-from mini_agent.config import AgentConfig, Config, LLMConfig, ToolsConfig
-from mini_agent.schema import FunctionCall, LLMResponse, ToolCall
-from mini_agent.tools.base import Tool, ToolResult
+from grape_agent.acp import MiniMaxACPAgent
+from grape_agent.config import AgentConfig, Config, LLMConfig, ToolsConfig
+from grape_agent.schema import FunctionCall, LLMResponse, ToolCall
+from grape_agent.tools.base import Tool, ToolResult
 
 
 class DummyConn:

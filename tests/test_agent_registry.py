@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from mini_agent.agents import AgentRegistry
-from mini_agent.config import Config
+from grape_agent.agents import AgentRegistry
+from grape_agent.config import Config
 
 
 def _write_config(path: Path, content: str) -> Path:

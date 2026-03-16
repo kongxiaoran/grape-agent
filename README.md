@@ -69,7 +69,7 @@ uv sync
 
 ```bash
 mkdir -p ~/.grape
-cp mini_agent/config/settings.json ~/.grape/settings.json
+cp grape_agent/config/settings.json ~/.grape/settings.json
 ```
 
 Edit `~/.grape/settings.json`:
@@ -119,7 +119,7 @@ uv run grape-agent-webterm-bridge
 ## Repository map (core folders)
 
 ```text
-mini_agent/
+grape_agent/
   agent.py                 # core Agent loop
   runtime_factory.py       # runtime assembly
   session_store.py         # session state and locks

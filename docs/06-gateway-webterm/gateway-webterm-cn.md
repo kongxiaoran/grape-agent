@@ -14,11 +14,11 @@ Gateway 是控制面，Webterm Bridge 是浏览器插件的本地桥接层。
 
 核心文件：
 
-- `mini_agent/gateway/server.py`
-- `mini_agent/gateway/router.py`
-- `mini_agent/gateway/handlers/*.py`
-- `mini_agent/webterm_bridge/server.py`
-- `mini_agent/webterm_bridge/gateway_client.py`
+- `grape_agent/gateway/server.py`
+- `grape_agent/gateway/router.py`
+- `grape_agent/gateway/handlers/*.py`
+- `grape_agent/webterm_bridge/server.py`
+- `grape_agent/webterm_bridge/gateway_client.py`
 - `browser_plugin/chrome-webterm-agent/*`
 
 关键方法：
@@ -37,14 +37,14 @@ Gateway 是控制面，Webterm Bridge 是浏览器插件的本地桥接层。
 ## 代码行号引用
 
 - Gateway 请求/响应协议模型  
-  `mini_agent/gateway/protocol.py:36`, `mini_agent/gateway/protocol.py:52`
+  `grape_agent/gateway/protocol.py:36`, `grape_agent/gateway/protocol.py:52`
 - Gateway TCP 服务（按行 JSON 收发）  
-  `mini_agent/gateway/server.py:18`, `mini_agent/gateway/server.py:54`, `mini_agent/gateway/server.py:75`
+  `grape_agent/gateway/server.py:18`, `grape_agent/gateway/server.py:54`, `grape_agent/gateway/server.py:75`
 - Gateway 内建方法注册  
-  `mini_agent/gateway/handlers/__init__.py:28`
+  `grape_agent/gateway/handlers/__init__.py:28`
 - `channels.send` / `channels.status` 实现  
-  `mini_agent/gateway/handlers/channels.py:6`, `mini_agent/gateway/handlers/channels.py:16`
+  `grape_agent/gateway/handlers/channels.py:6`, `grape_agent/gateway/handlers/channels.py:16`
 - Webterm Bridge HTTP API 与 Gateway 转发  
-  `mini_agent/webterm_bridge/server.py:24`, `mini_agent/webterm_bridge/server.py:71`, `mini_agent/webterm_bridge/server.py:97`
+  `grape_agent/webterm_bridge/server.py:24`, `grape_agent/webterm_bridge/server.py:71`, `grape_agent/webterm_bridge/server.py:97`
 - Bridge 会话管理与建议命令生成  
-  `mini_agent/webterm_bridge/session_manager.py:36`, `mini_agent/webterm_bridge/session_manager.py:47`, `mini_agent/webterm_bridge/session_manager.py:109`
+  `grape_agent/webterm_bridge/session_manager.py:36`, `grape_agent/webterm_bridge/session_manager.py:47`, `grape_agent/webterm_bridge/session_manager.py:109`

@@ -14,12 +14,12 @@
 
 核心文件：
 
-- `mini_agent/channels/runtime.py`
-- `mini_agent/channels/types.py`
-- `mini_agent/channels/plugins/feishu/plugin.py`
-- `mini_agent/feishu/server_ws.py`
-- `mini_agent/feishu/bridge.py`
-- `mini_agent/feishu/embedded_runner.py`
+- `grape_agent/channels/runtime.py`
+- `grape_agent/channels/types.py`
+- `grape_agent/channels/plugins/feishu/plugin.py`
+- `grape_agent/feishu/server_ws.py`
+- `grape_agent/feishu/bridge.py`
+- `grape_agent/feishu/embedded_runner.py`
 
 关键能力：
 
@@ -43,12 +43,12 @@
 ## 代码行号引用
 
 - 通道插件接口与上下文：`ChannelPlugin` / `ChannelContext`  
-  `mini_agent/channels/types.py:17`, `mini_agent/channels/types.py:28`
+  `grape_agent/channels/types.py:17`, `grape_agent/channels/types.py:28`
 - 通道运行时生命周期（start/stop/send/snapshot）  
-  `mini_agent/channels/runtime.py:12`, `mini_agent/channels/runtime.py:21`, `mini_agent/channels/runtime.py:52`
+  `grape_agent/channels/runtime.py:12`, `grape_agent/channels/runtime.py:21`, `grape_agent/channels/runtime.py:52`
 - Feishu 插件多账号启动与发送类型  
-  `mini_agent/channels/plugins/feishu/plugin.py:21`, `mini_agent/channels/plugins/feishu/plugin.py:33`, `mini_agent/channels/plugins/feishu/plugin.py:64`
+  `grape_agent/channels/plugins/feishu/plugin.py:21`, `grape_agent/channels/plugins/feishu/plugin.py:33`, `grape_agent/channels/plugins/feishu/plugin.py:64`
 - Feishu bridge 去重、路由、分片、处理中 ACK  
-  `mini_agent/feishu/bridge.py:113`, `mini_agent/feishu/bridge.py:157`, `mini_agent/feishu/bridge.py:279`, `mini_agent/feishu/bridge.py:282`
+  `grape_agent/feishu/bridge.py:113`, `grape_agent/feishu/bridge.py:157`, `grape_agent/feishu/bridge.py:279`, `grape_agent/feishu/bridge.py:282`
 - 终端入站回显挂钩（`ui.style=claude` 分支）  
-  `mini_agent/cli.py:827`, `mini_agent/cli.py:833`
+  `grape_agent/cli.py:827`, `grape_agent/cli.py:833`

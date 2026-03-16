@@ -6,12 +6,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from mini_agent.agents.orchestrator import SessionOrchestrator
-from mini_agent.session_store import AgentSessionStore
-from mini_agent.tools.sessions_history_tool import SessionsHistoryTool
-from mini_agent.tools.sessions_list_tool import SessionsListTool
-from mini_agent.tools.sessions_send_tool import SessionsSendTool
-from mini_agent.tools.sessions_spawn_tool import SessionsSpawnTool
+from grape_agent.agents.orchestrator import SessionOrchestrator
+from grape_agent.session_store import AgentSessionStore
+from grape_agent.tools.sessions_history_tool import SessionsHistoryTool
+from grape_agent.tools.sessions_list_tool import SessionsListTool
+from grape_agent.tools.sessions_send_tool import SessionsSendTool
+from grape_agent.tools.sessions_spawn_tool import SessionsSpawnTool
 
 
 class _DummyAgent:

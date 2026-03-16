@@ -2,7 +2,7 @@
 
 from types import SimpleNamespace
 
-from mini_agent.llm.anthropic_client import AnthropicClient
+from grape_agent.llm.anthropic_client import AnthropicClient
 
 
 def test_anthropic_parse_response_provider_events():

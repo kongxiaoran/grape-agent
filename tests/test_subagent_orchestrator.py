@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from mini_agent.agents.orchestrator import SessionOrchestrator
-from mini_agent.session_store import AgentSessionStore
+from grape_agent.agents.orchestrator import SessionOrchestrator
+from grape_agent.session_store import AgentSessionStore
 
 
 class _DummyAgent:

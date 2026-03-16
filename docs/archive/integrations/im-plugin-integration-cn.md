@@ -10,9 +10,9 @@
 
 当前基线（M2-M6）已完成：
 
-- 通道插件运行时：`mini_agent/channels/*`
-- Feishu 插件化（多账号）：`mini_agent/channels/plugins/feishu/plugin.py`
-- 启停接入：`mini_agent/cli.py`
+- 通道插件运行时：`grape_agent/channels/*`
+- Feishu 插件化（多账号）：`grape_agent/channels/plugins/feishu/plugin.py`
+- 启停接入：`grape_agent/cli.py`
 - 通道状态查询：Gateway `channels.status`
 - 主动发送入口：Gateway `channels.send`（透传 `ChannelRuntime.send`）
 - 通道标准日志：`[ChannelEvent] channel=... event=...`
@@ -34,20 +34,20 @@
 
 ### 2.2 关键代码入口
 
-- 插件协议：`mini_agent/channels/types.py`
-- 插件注册表：`mini_agent/channels/registry.py`
-- 插件运行时：`mini_agent/channels/runtime.py`
-- 默认注册：`build_default_registry()` in `mini_agent/channels/runtime.py`
-- CLI 生命周期接入：`mini_agent/cli.py`
+- 插件协议：`grape_agent/channels/types.py`
+- 插件注册表：`grape_agent/channels/registry.py`
+- 插件运行时：`grape_agent/channels/runtime.py`
+- 默认注册：`build_default_registry()` in `grape_agent/channels/runtime.py`
+- CLI 生命周期接入：`grape_agent/cli.py`
 - Gateway 状态：
-  - `mini_agent/gateway/handlers/channels.py`
-  - `mini_agent/gateway/handlers/status.py`
+  - `grape_agent/gateway/handlers/channels.py`
+  - `grape_agent/gateway/handlers/status.py`
 
 ---
 
 ## 3. 插件接口规范（必须实现）
 
-`ChannelPlugin` 协议定义在 `mini_agent/channels/types.py`：
+`ChannelPlugin` 协议定义在 `grape_agent/channels/types.py`：
 
 ```python
 class ChannelPlugin(Protocol):
@@ -98,7 +98,7 @@ channels:
       progress_ping_sec: 15
 ```
 
-对应配置模型在 `mini_agent/config.py`：
+对应配置模型在 `grape_agent/config.py`：
 
 - `FeishuConfig`
 - `ChannelsConfig`
@@ -116,14 +116,14 @@ channels:
 以新增 `telegram` 为例：
 
 1. 新建插件目录  
-`mini_agent/channels/plugins/telegram/`
+`grape_agent/channels/plugins/telegram/`
 
 2. 实现插件类（参考 Feishu 插件）
 
 ```python
 from __future__ import annotations
 from typing import Any
-from mini_agent.channels.types import ChannelContext
+from grape_agent.channels.types import ChannelContext
 
 class TelegramChannelPlugin:
     id = "telegram"
@@ -164,8 +164,8 @@ registry.register("telegram", TelegramChannelPlugin)
 5. 增加配置模型与示例  
 编辑：
 
-- `mini_agent/config.py`
-- `mini_agent/config/config-example.yaml`
+- `grape_agent/config.py`
+- `grape_agent/config/config-example.yaml`
 
 6. 增加测试  
 建议至少补：
@@ -179,8 +179,8 @@ registry.register("telegram", TelegramChannelPlugin)
 
 当前 Feishu 插件是一个包装层，复用既有 Feishu 逻辑：
 
-- 插件类：`mini_agent/channels/plugins/feishu/plugin.py`
-- 内部 runner：`mini_agent/feishu/embedded_runner.py`
+- 插件类：`grape_agent/channels/plugins/feishu/plugin.py`
+- 内部 runner：`grape_agent/feishu/embedded_runner.py`
 - runner 内部仍调用 `FeishuWebSocketServer` + bridge
 
 这是一种迁移友好的改造方式：

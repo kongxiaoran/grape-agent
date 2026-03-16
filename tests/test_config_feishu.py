@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.config import Config
+from grape_agent.config import Config
 
 
 def _write_config(path: Path, content: str) -> Path:

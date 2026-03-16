@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from mini_agent.config import Config
+from grape_agent.config import Config
 
 
 def _write(path: Path, content: str) -> Path:

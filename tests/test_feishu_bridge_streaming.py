@@ -9,9 +9,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from mini_agent.config import Config
-from mini_agent.feishu.bridge import FeishuAgentBridge
-from mini_agent.feishu.types import FeishuChatType, FeishuIncomingMessage, FeishuMessageType, FeishuSendResult
+from grape_agent.config import Config
+from grape_agent.feishu.bridge import FeishuAgentBridge
+from grape_agent.feishu.types import FeishuChatType, FeishuIncomingMessage, FeishuMessageType, FeishuSendResult
 
 
 def _write_config(path: Path, content: str) -> Path:
@@ -163,7 +163,7 @@ async def test_bridge_chunk_reply_stream_mode_with_send(monkeypatch, tmp_path):
     async def _fake_sleep(seconds: float):
         sleep_calls.append(seconds)
 
-    monkeypatch.setattr("mini_agent.feishu.bridge.asyncio.sleep", _fake_sleep)
+    monkeypatch.setattr("grape_agent.feishu.bridge.asyncio.sleep", _fake_sleep)
     bridge._reply = _fake_reply  # type: ignore[method-assign]
     await bridge._send_chunked_reply(inbound, "b" * 1200)
 
@@ -192,7 +192,7 @@ async def test_bridge_chunk_reply_stream_mode_with_reply_all(monkeypatch, tmp_pa
     async def _fake_sleep(seconds: float):
         sleep_calls.append(seconds)
 
-    monkeypatch.setattr("mini_agent.feishu.bridge.asyncio.sleep", _fake_sleep)
+    monkeypatch.setattr("grape_agent.feishu.bridge.asyncio.sleep", _fake_sleep)
     bridge._reply = _fake_reply  # type: ignore[method-assign]
     await bridge._send_chunked_reply(inbound, "c" * 1200)
 
@@ -218,7 +218,7 @@ async def test_bridge_progress_ping_loop_sends_keepalive(monkeypatch, tmp_path):
         if len(sleep_calls) >= 2:
             raise asyncio.CancelledError
 
-    monkeypatch.setattr("mini_agent.feishu.bridge.asyncio.sleep", _fake_sleep)
+    monkeypatch.setattr("grape_agent.feishu.bridge.asyncio.sleep", _fake_sleep)
     bridge._reply = _fake_reply  # type: ignore[method-assign]
 
     with pytest.raises(asyncio.CancelledError):

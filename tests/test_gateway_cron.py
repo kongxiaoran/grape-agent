@@ -6,14 +6,14 @@ from datetime import datetime
 
 import pytest
 
-from mini_agent.config import Config
-from mini_agent.cron.models import CronRun, utc_now_iso
-from mini_agent.cron.store import CronStore
-from mini_agent.gateway.handlers import register_builtin_handlers
-from mini_agent.gateway.protocol import GatewayContext
-from mini_agent.gateway.router import GatewayRouter
-from mini_agent.gateway.server import GatewayServer
-from mini_agent.session_store import AgentSessionStore
+from grape_agent.config import Config
+from grape_agent.cron.models import CronRun, utc_now_iso
+from grape_agent.cron.store import CronStore
+from grape_agent.gateway.handlers import register_builtin_handlers
+from grape_agent.gateway.protocol import GatewayContext
+from grape_agent.gateway.router import GatewayRouter
+from grape_agent.gateway.server import GatewayServer
+from grape_agent.session_store import AgentSessionStore
 
 
 class _DummyScheduler:

@@ -31,6 +31,6 @@
 
 ## 代码行号引用
 
-- CLI 启动与交互主循环：`mini_agent/cli.py:756`, `mini_agent/cli.py:1108`
-- 飞书入站终端回显挂钩：`mini_agent/cli.py:827`, `mini_agent/cli.py:833`
-- Gateway `status` 处理：`mini_agent/gateway/handlers/status.py:8`
+- CLI 启动与交互主循环：`grape_agent/cli.py:756`, `grape_agent/cli.py:1108`
+- 飞书入站终端回显挂钩：`grape_agent/cli.py:827`, `grape_agent/cli.py:833`
+- Gateway `status` 处理：`grape_agent/gateway/handlers/status.py:8`

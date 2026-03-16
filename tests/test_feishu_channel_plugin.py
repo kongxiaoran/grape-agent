@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.channels.plugins.feishu.plugin import FeishuChannelPlugin
-from mini_agent.channels.types import ChannelContext
-from mini_agent.config import Config
+from grape_agent.channels.plugins.feishu.plugin import FeishuChannelPlugin
+from grape_agent.channels.types import ChannelContext
+from grape_agent.config import Config
 
 
 def _write_config(path: Path, content: str) -> Path:
@@ -78,7 +78,7 @@ async def test_plugin_start_multi_account_and_send(monkeypatch, tmp_path):
         def snapshot(self):
             return {"enabled": True, "running": self.started and not self.stopped, "account_id": self.account_id}
 
-    import mini_agent.channels.plugins.feishu.plugin as feishu_plugin_mod
+    import grape_agent.channels.plugins.feishu.plugin as feishu_plugin_mod
 
     monkeypatch.setattr(feishu_plugin_mod, "EmbeddedFeishuRunner", _DummyRunner)
     plugin = FeishuChannelPlugin()
@@ -135,7 +135,7 @@ async def test_plugin_send_unknown_account(monkeypatch, tmp_path):
         def snapshot(self):
             return {"enabled": True, "running": True}
 
-    import mini_agent.channels.plugins.feishu.plugin as feishu_plugin_mod
+    import grape_agent.channels.plugins.feishu.plugin as feishu_plugin_mod
 
     monkeypatch.setattr(feishu_plugin_mod, "EmbeddedFeishuRunner", _DummyRunner)
     plugin = FeishuChannelPlugin()

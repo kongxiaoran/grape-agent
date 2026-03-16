@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.config import Config
-from mini_agent.feishu.bridge import FeishuAgentBridge
-from mini_agent.feishu.types import FeishuChatType, FeishuIncomingMessage, FeishuMessageType
+from grape_agent.config import Config
+from grape_agent.feishu.bridge import FeishuAgentBridge
+from grape_agent.feishu.types import FeishuChatType, FeishuIncomingMessage, FeishuMessageType
 
 
 def _write_config(path: Path, content: str) -> Path:

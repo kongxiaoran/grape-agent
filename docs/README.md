@@ -21,5 +21,6 @@
 10. [Cron 与隔离执行](./07-cron-isolation/cron-isolation-cn.md)
 11. [CLI 与终端 UI](./08-cli-ui/cli-ui-cn.md)
 12. [部署与运维](./09-deploy-ops/deploy-ops-cn.md)
-13. [文档迁移映射表](./00-intro/doc-migration-map.md)
-14. [历史归档索引](./archive/README.md)
+13. [发布 SOP（推送/打包/下载/配置）](./09-deploy-ops/sop-github-build-release-config-cn.md)
+14. [文档迁移映射表](./00-intro/doc-migration-map.md)
+15. [历史归档索引](./archive/README.md)

@@ -1,8 +1,8 @@
 """Unit tests for Feishu message helpers."""
 
-from mini_agent.feishu.dedup import FeishuMessageDedup
-from mini_agent.feishu.message_utils import chunk_text, parse_incoming_event, strip_bot_mentions
-from mini_agent.feishu.types import FeishuMessageType
+from grape_agent.feishu.dedup import FeishuMessageDedup
+from grape_agent.feishu.message_utils import chunk_text, parse_incoming_event, strip_bot_mentions
+from grape_agent.feishu.types import FeishuMessageType
 
 
 def test_parse_incoming_text_event_with_mentions():

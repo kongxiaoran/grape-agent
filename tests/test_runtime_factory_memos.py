@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from mini_agent.config import (
+from grape_agent.config import (
     AgentConfig,
     ChannelsConfig,
     Config,
@@ -11,7 +11,7 @@ from mini_agent.config import (
     ToolsConfig,
     WebtermBridgeConfig,
 )
-from mini_agent.runtime_factory import add_workspace_tools, create_turn_memory_hook
+from grape_agent.runtime_factory import add_workspace_tools, create_turn_memory_hook
 
 
 def _make_config(*, memos_enabled: bool, memos_api_key: str) -> Config:

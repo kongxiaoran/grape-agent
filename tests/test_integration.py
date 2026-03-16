@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent import LLMClient
-from mini_agent.agent import Agent
-from mini_agent.config import Config
-from mini_agent.tools import BashTool, EditTool, ReadTool, WriteTool
-from mini_agent.tools.mcp_loader import load_mcp_tools_async
-from mini_agent.tools.note_tool import RecallNoteTool, SessionNoteTool
+from grape_agent import LLMClient
+from grape_agent.agent import Agent
+from grape_agent.config import Config
+from grape_agent.tools import BashTool, EditTool, ReadTool, WriteTool
+from grape_agent.tools.mcp_loader import load_mcp_tools_async
+from grape_agent.tools.note_tool import RecallNoteTool, SessionNoteTool
 
 
 @pytest.mark.asyncio
@@ -27,7 +27,7 @@ async def test_basic_agent_usage():
     print("=" * 80)
 
     # Load configuration
-    config_path = Path("mini_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/config.yaml")
     if not config_path.exists():
         pytest.skip("config.yaml not found")
 
@@ -40,7 +40,7 @@ async def test_basic_agent_usage():
     # Use temporary workspace
     with tempfile.TemporaryDirectory() as workspace_dir:
         # Load system prompt (Agent will auto-inject workspace info)
-        system_prompt_path = Path("mini_agent/config/system_prompt.md")
+        system_prompt_path = Path("grape_agent/config/system_prompt.md")
         if system_prompt_path.exists():
             system_prompt = system_prompt_path.read_text(encoding="utf-8")
         else:
@@ -75,7 +75,7 @@ async def test_basic_agent_usage():
             # MCP tools are disabled by default to prevent test hangs
             # Enable specific MCP servers in mcp.json if needed
             mcp_tools = await load_mcp_tools_async(
-                config_path="mini_agent/config/mcp.json"
+                config_path="grape_agent/config/mcp.json"
             )
             if mcp_tools:
                 print(f"✓ Loaded {len(mcp_tools)} MCP tools")
@@ -131,7 +131,7 @@ async def test_session_memory_demo():
     print("=" * 80)
 
     # Load config
-    config_path = Path("mini_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/config.yaml")
     if not config_path.exists():
         pytest.skip("config.yaml not found")
 

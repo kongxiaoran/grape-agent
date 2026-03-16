@@ -8,7 +8,7 @@
 
 ## 2. 配置
 
-在 `mini_agent/config/config.yaml` 增加或确认：
+在 `grape_agent/config/config.yaml` 增加或确认：
 
 ```yaml
 gateway:
@@ -31,7 +31,7 @@ webterm_bridge:
   parent_session_key: "agent:main:terminal:main"
   default_agent_id: "main"
   auto_execute_low_risk: false
-  profile_path: "mini_agent/config/webterm_profiles.yaml"
+  profile_path: "grape_agent/config/webterm_profiles.yaml"
 ```
 
 如果当前环境还没有 bridge 运行依赖，请先安装：
@@ -85,7 +85,7 @@ curl -s http://127.0.0.1:8766/health
 
 ## 5.1 配置堡垒机场景画像（推荐）
 
-文件：`mini_agent/config/webterm_profiles.yaml`
+文件：`grape_agent/config/webterm_profiles.yaml`
 
 ```yaml
 profiles:

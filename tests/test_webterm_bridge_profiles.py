@@ -1,6 +1,6 @@
 """Tests for webterm bridge profile loading and matching."""
 
-from mini_agent.webterm_bridge.profile_store import load_profiles, resolve_profile_context
+from grape_agent.webterm_bridge.profile_store import load_profiles, resolve_profile_context
 
 
 def test_load_profiles_and_resolve(tmp_path):

@@ -69,7 +69,7 @@ uv sync
 
 ```bash
 mkdir -p ~/.grape
-cp mini_agent/config/settings.json ~/.grape/settings.json
+cp grape_agent/config/settings.json ~/.grape/settings.json
 ```
 
 编辑 `~/.grape/settings.json`：
@@ -119,7 +119,7 @@ uv run grape-agent-webterm-bridge
 ## 仓库结构（核心目录）
 
 ```text
-mini_agent/
+grape_agent/
   agent.py                 # Agent 主循环
   runtime_factory.py       # 运行时组装（LLM/Tools/Prompt）
   session_store.py         # 会话存储与并发锁

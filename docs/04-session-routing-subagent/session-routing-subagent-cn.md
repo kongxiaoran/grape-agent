@@ -14,14 +14,14 @@
 
 核心文件：
 
-- `mini_agent/session_store.py`
-- `mini_agent/routing/resolver.py`
-- `mini_agent/routing/session_key.py`
-- `mini_agent/agents/orchestrator.py`
-- `mini_agent/tools/sessions_spawn_tool.py`
-- `mini_agent/tools/sessions_send_tool.py`
-- `mini_agent/tools/sessions_history_tool.py`
-- `mini_agent/tools/sessions_list_tool.py`
+- `grape_agent/session_store.py`
+- `grape_agent/routing/resolver.py`
+- `grape_agent/routing/session_key.py`
+- `grape_agent/agents/orchestrator.py`
+- `grape_agent/tools/sessions_spawn_tool.py`
+- `grape_agent/tools/sessions_send_tool.py`
+- `grape_agent/tools/sessions_history_tool.py`
+- `grape_agent/tools/sessions_list_tool.py`
 
 关键策略：
 
@@ -38,12 +38,12 @@
 ## 代码行号引用
 
 - 会话 key 规范：`agent:{agent_id}:{channel}:{chat_id}`  
-  `mini_agent/routing/session_key.py:6`
+  `grape_agent/routing/session_key.py:6`
 - 路由解析与规则匹配：`RoutingResolver.resolve()`  
-  `mini_agent/routing/resolver.py:11`, `mini_agent/routing/resolver.py:38`
+  `grape_agent/routing/resolver.py:11`, `grape_agent/routing/resolver.py:38`
 - 会话存储与会话锁：`AgentSessionStore` / `AgentSession.lock`  
-  `mini_agent/session_store.py:14`, `mini_agent/session_store.py:40`, `mini_agent/session_store.py:64`
+  `grape_agent/session_store.py:14`, `grape_agent/session_store.py:40`, `grape_agent/session_store.py:64`
 - Subagent 编排与深度限制：`SessionOrchestrator.spawn()`  
-  `mini_agent/agents/orchestrator.py:32`, `mini_agent/agents/orchestrator.py:53`, `mini_agent/agents/orchestrator.py:69`
+  `grape_agent/agents/orchestrator.py:32`, `grape_agent/agents/orchestrator.py:53`, `grape_agent/agents/orchestrator.py:69`
 - 叶子节点禁用会话工具策略：`SubagentPolicy`  
-  `mini_agent/agents/policy.py:11`, `mini_agent/agents/policy.py:16`
+  `grape_agent/agents/policy.py:11`, `grape_agent/agents/policy.py:16`

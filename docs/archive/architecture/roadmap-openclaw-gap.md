@@ -51,10 +51,10 @@
 
 ### M1-1 建立 Gateway Server 骨架
 - 改动文件
-  - `mini_agent/gateway/server.py`（新建）
-  - `mini_agent/gateway/protocol.py`（新建）
-  - `mini_agent/gateway/handlers/__init__.py`（新建）
-  - `mini_agent/cli.py`（接入 Gateway 启动）
+  - `grape_agent/gateway/server.py`（新建）
+  - `grape_agent/gateway/protocol.py`（新建）
+  - `grape_agent/gateway/handlers/__init__.py`（新建）
+  - `grape_agent/cli.py`（接入 Gateway 启动）
 - 接口草案
 ```python
 class GatewayServer:
@@ -79,9 +79,9 @@ class GatewayResponse(TypedDict):
 
 ### M1-2 Gateway 方法注册与处理器分层
 - 改动文件
-  - `mini_agent/gateway/router.py`（新建）
-  - `mini_agent/gateway/handlers/health.py`（新建）
-  - `mini_agent/gateway/handlers/sessions.py`（新建）
+  - `grape_agent/gateway/router.py`（新建）
+  - `grape_agent/gateway/handlers/health.py`（新建）
+  - `grape_agent/gateway/handlers/sessions.py`（新建）
 - 接口草案
 ```python
 Handler = Callable[[dict, GatewayContext], Awaitable[dict]]
@@ -97,9 +97,9 @@ class GatewayRouter:
 
 ### M1-3 鉴权与连接级上下文
 - 改动文件
-  - `mini_agent/gateway/auth.py`（新建）
-  - `mini_agent/config.py`（新增 gateway.auth 配置）
-  - `mini_agent/config/config-example.yaml`（新增示例）
+  - `grape_agent/gateway/auth.py`（新建）
+  - `grape_agent/config.py`（新增 gateway.auth 配置）
+  - `grape_agent/config/config-example.yaml`（新增示例）
 - 接口草案
 ```python
 class GatewayAuthConfig(BaseModel):
@@ -121,9 +121,9 @@ class ConnectionContext(TypedDict):
 
 ### M2-1 抽象 ChannelPlugin 协议
 - 改动文件
-  - `mini_agent/channels/types.py`（新建）
-  - `mini_agent/channels/registry.py`（新建）
-  - `mini_agent/channels/runtime.py`（新建）
+  - `grape_agent/channels/types.py`（新建）
+  - `grape_agent/channels/registry.py`（新建）
+  - `grape_agent/channels/runtime.py`（新建）
 - 接口草案
 ```python
 class ChannelPlugin(Protocol):
@@ -139,9 +139,9 @@ class ChannelPlugin(Protocol):
 
 ### M2-2 Feishu 改造为插件实现
 - 改动文件
-  - `mini_agent/channels/plugins/feishu/plugin.py`（新建）
-  - `mini_agent/channels/plugins/feishu/adapter.py`（新建）
-  - `mini_agent/feishu/*`（迁移/收敛）
+  - `grape_agent/channels/plugins/feishu/plugin.py`（新建）
+  - `grape_agent/channels/plugins/feishu/adapter.py`（新建）
+  - `grape_agent/feishu/*`（迁移/收敛）
 - 接口草案
 ```python
 class FeishuPlugin(ChannelPlugin):
@@ -156,9 +156,9 @@ class FeishuPlugin(ChannelPlugin):
 
 ### M2-3 插件配置标准化
 - 改动文件
-  - `mini_agent/config.py`
-  - `mini_agent/config/config-example.yaml`
-  - `mini_agent/channels/config_loader.py`（新建）
+  - `grape_agent/config.py`
+  - `grape_agent/config/config-example.yaml`
+  - `grape_agent/channels/config_loader.py`（新建）
 - 接口草案
 ```yaml
 channels:
@@ -179,9 +179,9 @@ channels:
 
 ### M3-1 AgentProfile 与 AgentRegistry
 - 改动文件
-  - `mini_agent/agents/profile.py`（新建）
-  - `mini_agent/agents/registry.py`（新建）
-  - `mini_agent/runtime_factory.py`（支持按 agent_id 构建）
+  - `grape_agent/agents/profile.py`（新建）
+  - `grape_agent/agents/registry.py`（新建）
+  - `grape_agent/runtime_factory.py`（支持按 agent_id 构建）
 - 接口草案
 ```python
 class AgentProfile(BaseModel):
@@ -200,9 +200,9 @@ class AgentRegistry:
 
 ### M3-2 RoutingRule 与路由解析器
 - 改动文件
-  - `mini_agent/routing/rules.py`（新建）
-  - `mini_agent/routing/resolver.py`（新建）
-  - `mini_agent/channels/runtime.py`（接入 resolver）
+  - `grape_agent/routing/rules.py`（新建）
+  - `grape_agent/routing/resolver.py`（新建）
+  - `grape_agent/channels/runtime.py`（接入 resolver）
 - 接口草案
 ```python
 class RoutingInput(TypedDict):
@@ -223,8 +223,8 @@ class RoutingResult(TypedDict):
 
 ### M3-3 会话键规范
 - 改动文件
-  - `mini_agent/session_store.py`
-  - `mini_agent/routing/session_key.py`（新建）
+  - `grape_agent/session_store.py`
+  - `grape_agent/routing/session_key.py`（新建）
 - 接口草案
 ```python
 def build_session_key(agent_id: str, channel: str, chat_id: str) -> str:
@@ -241,9 +241,9 @@ def build_session_key(agent_id: str, channel: str, chat_id: str) -> str:
 
 ### M4-1 引入 `sessions_spawn` 工具
 - 改动文件
-  - `mini_agent/tools/sessions_spawn_tool.py`（新建）
-  - `mini_agent/agents/spawn.py`（新建）
-  - `mini_agent/runtime_factory.py`（工具注入）
+  - `grape_agent/tools/sessions_spawn_tool.py`（新建）
+  - `grape_agent/agents/spawn.py`（新建）
+  - `grape_agent/runtime_factory.py`（工具注入）
 - 接口草案
 ```python
 async def sessions_spawn(task: str, agent_id: str | None = None, mode: str = "run") -> dict:
@@ -256,9 +256,9 @@ async def sessions_spawn(task: str, agent_id: str | None = None, mode: str = "ru
 
 ### M4-2 `sessions_list/history/send` 工具集
 - 改动文件
-  - `mini_agent/tools/sessions_list_tool.py`（新建）
-  - `mini_agent/tools/sessions_history_tool.py`（新建）
-  - `mini_agent/tools/sessions_send_tool.py`（新建）
+  - `grape_agent/tools/sessions_list_tool.py`（新建）
+  - `grape_agent/tools/sessions_history_tool.py`（新建）
+  - `grape_agent/tools/sessions_send_tool.py`（新建）
 - 接口草案
 ```python
 async def sessions_list(limit: int = 20) -> list[dict]: ...
@@ -272,8 +272,8 @@ async def sessions_send(session_key: str, message: str, wait: bool = False) -> d
 
 ### M4-3 深度与权限策略
 - 改动文件
-  - `mini_agent/agents/policy.py`（新建）
-  - `mini_agent/tools/tool_policy.py`（新建）
+  - `grape_agent/agents/policy.py`（新建）
+  - `grape_agent/tools/tool_policy.py`（新建）
 - 接口草案
 ```python
 class SubagentPolicy(BaseModel):
@@ -291,9 +291,9 @@ class SubagentPolicy(BaseModel):
 
 ### M5-1 Cron 数据模型与持久化
 - 改动文件
-  - `mini_agent/cron/models.py`（新建）
-  - `mini_agent/cron/store.py`（新建）
-  - `mini_agent/config.py`（cron 配置）
+  - `grape_agent/cron/models.py`（新建）
+  - `grape_agent/cron/store.py`（新建）
+  - `grape_agent/config.py`（cron 配置）
 - 接口草案
 ```python
 class CronJob(BaseModel):
@@ -310,9 +310,9 @@ class CronJob(BaseModel):
 
 ### M5-2 调度器与执行器
 - 改动文件
-  - `mini_agent/cron/scheduler.py`（新建）
-  - `mini_agent/cron/executor.py`（新建）
-  - `mini_agent/cli.py`（生命周期接入）
+  - `grape_agent/cron/scheduler.py`（新建）
+  - `grape_agent/cron/executor.py`（新建）
+  - `grape_agent/cli.py`（生命周期接入）
 - 接口草案
 ```python
 class CronScheduler:
@@ -326,8 +326,8 @@ class CronScheduler:
 
 ### M5-3 回投递与可观测
 - 改动文件
-  - `mini_agent/cron/delivery.py`（新建）
-  - `mini_agent/gateway/handlers/cron.py`（新建）
+  - `grape_agent/cron/delivery.py`（新建）
+  - `grape_agent/gateway/handlers/cron.py`（新建）
 - 接口草案
 ```python
 async def deliver_cron_result(job_id: str, result: str, channel_target: dict | None) -> None: ...
@@ -343,9 +343,9 @@ async def deliver_cron_result(job_id: str, result: str, channel_target: dict | N
 
 ### M6-1 多账号与账号路由
 - 改动文件
-  - `mini_agent/channels/plugins/feishu/accounts.py`（新建）
-  - `mini_agent/channels/plugins/feishu/plugin.py`
-  - `mini_agent/config.py`
+  - `grape_agent/channels/plugins/feishu/accounts.py`（新建）
+  - `grape_agent/channels/plugins/feishu/plugin.py`
+  - `grape_agent/config.py`
 - 接口草案
 ```yaml
 channels:
@@ -362,8 +362,8 @@ channels:
 
 ### M6-2 线程/话题回复与策略细化
 - 改动文件
-  - `mini_agent/channels/plugins/feishu/threading.py`（新建）
-  - `mini_agent/channels/plugins/feishu/policy.py`（新建）
+  - `grape_agent/channels/plugins/feishu/threading.py`（新建）
+  - `grape_agent/channels/plugins/feishu/policy.py`（新建）
 - 接口草案
 ```python
 class FeishuPolicy(BaseModel):
@@ -378,8 +378,8 @@ class FeishuPolicy(BaseModel):
 
 ### M6-3 流式输出与卡片能力
 - 改动文件
-  - `mini_agent/channels/plugins/feishu/streaming.py`（新建）
-  - `mini_agent/channels/plugins/feishu/cards.py`（新建）
+  - `grape_agent/channels/plugins/feishu/streaming.py`（新建）
+  - `grape_agent/channels/plugins/feishu/cards.py`（新建）
 - 接口草案
 ```python
 class StreamingEmitter(Protocol):
@@ -411,4 +411,4 @@ class StreamingEmitter(Protocol):
 1. 功能验收：核心流程可在本地复现（含异常路径）。
 2. 测试验收：新增单测 + 集成测试，关键路径覆盖率不低于既有基线。
 3. 文档验收：配置、启动、排障命令更新到 `docs/`。
-4. 回滚验收：提供开关或兼容路径，不阻断现有 `mini_agent.cli` 使用。
+4. 回滚验收：提供开关或兼容路径，不阻断现有 `grape_agent.cli` 使用。

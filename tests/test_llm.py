@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from mini_agent.llm import LLMClient
-from mini_agent.schema import LLMProvider, Message
+from grape_agent.llm import LLMClient
+from grape_agent.schema import LLMProvider, Message
 
 
 @pytest.mark.asyncio
@@ -16,7 +16,7 @@ async def test_wrapper_anthropic_provider():
     print("\n=== Testing LLM Wrapper (Anthropic Provider) ===")
 
     # Load config
-    config_path = Path("mini_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/config.yaml")
     with open(config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
@@ -63,7 +63,7 @@ async def test_wrapper_openai_provider():
     print("\n=== Testing LLM Wrapper (OpenAI Provider) ===")
 
     # Load config
-    config_path = Path("mini_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/config.yaml")
     with open(config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
@@ -109,7 +109,7 @@ async def test_wrapper_default_provider():
     print("\n=== Testing LLM Wrapper (Default Provider) ===")
 
     # Load config
-    config_path = Path("mini_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/config.yaml")
     with open(config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
@@ -130,7 +130,7 @@ async def test_wrapper_tool_calling():
     print("\n=== Testing LLM Wrapper Tool Calling ===")
 
     # Load config
-    config_path = Path("mini_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/config.yaml")
     with open(config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 

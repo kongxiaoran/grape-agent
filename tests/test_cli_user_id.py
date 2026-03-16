@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from mini_agent.cli import resolve_cli_user_id
+from grape_agent.cli import resolve_cli_user_id
 
 
 def test_resolve_cli_user_id_prefers_cli_arg(monkeypatch, tmp_path: Path):

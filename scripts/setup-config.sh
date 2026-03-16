@@ -38,7 +38,7 @@ fi
 echo -e "${BLUE}[2/2]${NC} Downloading configuration files..."
 
 FILES_COPIED=0
-GITHUB_RAW_URL="https://raw.githubusercontent.com/MiniMax-AI/Grape-Agent/main/mini_agent/config"
+GITHUB_RAW_URL="https://raw.githubusercontent.com/MiniMax-AI/Grape-Agent/main/grape_agent/config"
 
 # Download config-example.yaml as config.yaml
 if curl -fsSL "$GITHUB_RAW_URL/config-example.yaml" -o "$CONFIG_DIR/config.yaml" 2>/dev/null; then

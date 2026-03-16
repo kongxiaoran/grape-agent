@@ -14,9 +14,9 @@
 
 程序会按以下优先级查找 `config.yaml`：
 
-1. `./mini_agent/config/config.yaml`（开发目录）
+1. `./grape_agent/config/config.yaml`（开发目录）
 2. `~/.grape-agent/config/config.yaml`（当前运行用户）
-3. 包安装目录内 `mini_agent/config/config.yaml`
+3. 包安装目录内 `grape_agent/config/config.yaml`
 
 生产环境建议使用第 2 种（用户级配置目录）。
 
@@ -32,10 +32,10 @@ cd Grape-Agent
 uv sync
 
 # 初始化配置
-cp mini_agent/config/config-example.yaml mini_agent/config/config.yaml
+cp grape_agent/config/config-example.yaml grape_agent/config/config.yaml
 ```
 
-编辑 `mini_agent/config/config.yaml`，至少确认这些字段：
+编辑 `grape_agent/config/config.yaml`，至少确认这些字段：
 
 ```yaml
 api_key: "<YOUR_LLM_API_KEY>"
@@ -125,7 +125,7 @@ git clone <your-repo-url> .
 uv sync
 
 mkdir -p ~/.grape-agent/config
-cp mini_agent/config/config-example.yaml ~/.grape-agent/config/config.yaml
+cp grape_agent/config/config-example.yaml ~/.grape-agent/config/config.yaml
 ```
 
 编辑 `~/.grape-agent/config/config.yaml`（同本地章节）。
@@ -210,19 +210,19 @@ mkdir -p build/entrypoints
 
 ## 5.2 创建打包入口
 
-`build/entrypoints/mini_agent_main.py`：
+`build/entrypoints/grape_agent_main.py`：
 
 ```python
-from mini_agent.cli import main
+from grape_agent.cli import main
 
 if __name__ == "__main__":
     main()
 ```
 
-`build/entrypoints/mini_agent_bridge_main.py`：
+`build/entrypoints/grape_agent_bridge_main.py`：
 
 ```python
-from mini_agent.webterm_bridge.server import main
+from grape_agent.webterm_bridge.server import main
 
 if __name__ == "__main__":
     main()
@@ -235,13 +235,13 @@ cd /opt/grape-agent
 
 uv run pyinstaller --clean --onefile \
   --name grape-agent \
-  --collect-all mini_agent \
-  build/entrypoints/mini_agent_main.py
+  --collect-all grape_agent \
+  build/entrypoints/grape_agent_main.py
 
 uv run pyinstaller --clean --onefile \
   --name grape-agent-webterm-bridge \
-  --collect-all mini_agent \
-  build/entrypoints/mini_agent_bridge_main.py
+  --collect-all grape_agent \
+  build/entrypoints/grape_agent_bridge_main.py
 ```
 
 产物路径：
@@ -301,5 +301,5 @@ sudo systemctl restart grape-agent grape-agent-webterm-bridge
 - 查看 `journalctl -u grape-agent -f` 日志中是否有鉴权失败。
 
 4. 打包后二进制启动报缺模块
-- 重新打包并确保使用 `--collect-all mini_agent`。
+- 重新打包并确保使用 `--collect-all grape_agent`。
 - 在目标机与打包机保持一致的 Python/系统架构。

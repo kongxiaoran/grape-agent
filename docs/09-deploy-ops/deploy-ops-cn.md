@@ -17,6 +17,7 @@
 - `docs/archive/ops/agent-bridge-linux-deploy-cn.md`
 - `docs/DEPLOY_ONEFILE_TENGXUN1_RUNBOOK_CN.md`
 - `docs/09-deploy-ops/packaging-macos-windows-cn.md`
+- `docs/09-deploy-ops/sop-github-build-release-config-cn.md`
 - `docs/archive/ops/production-guide-cn.md`
 
 建议运行拓扑：
@@ -40,12 +41,12 @@
 ## 代码行号引用
 
 - 默认配置搜索顺序（`~/.grape/settings.json` 优先）  
-  `mini_agent/config.py:704`, `mini_agent/config.py:712`
+  `grape_agent/config.py:704`, `grape_agent/config.py:712`
 - 启动入口与主循环  
-  `mini_agent/cli.py:1302`, `mini_agent/cli.py:1327`
+  `grape_agent/cli.py:1302`, `grape_agent/cli.py:1327`
 - Gateway 启停与状态输出  
-  `mini_agent/cli.py:994`, `mini_agent/gateway/server.py:27`, `mini_agent/gateway/server.py:41`
+  `grape_agent/cli.py:994`, `grape_agent/gateway/server.py:27`, `grape_agent/gateway/server.py:41`
 - Feishu 通道随主进程生命周期启动/停止  
-  `mini_agent/cli.py:956`, `mini_agent/cli.py:1293`, `mini_agent/channels/runtime.py:21`, `mini_agent/channels/runtime.py:38`
+  `grape_agent/cli.py:956`, `grape_agent/cli.py:1293`, `grape_agent/channels/runtime.py:21`, `grape_agent/channels/runtime.py:38`
 - Webterm Bridge 独立服务入口  
-  `mini_agent/webterm_bridge/server.py:163`
+  `grape_agent/webterm_bridge/server.py:163`

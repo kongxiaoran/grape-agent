@@ -21,11 +21,11 @@
 - 文件：`browser_plugin/chrome-webterm-agent/service_worker.js`
 
 3. **本地配置去敏**
-- `mini_agent/config/config.yaml` 已回退为 `config-example.yaml` 的安全示例内容（无真实 API Key / App Secret）。
+- `grape_agent/config/config.yaml` 已回退为 `config-example.yaml` 的安全示例内容（无真实 API Key / App Secret）。
 
 4. **日志画像示例去私有化**
 - `webterm_profiles.yaml` 中内网主机、账号、路径已替换为公开示例。
-- 文件：`mini_agent/config/webterm_profiles.yaml`
+- 文件：`grape_agent/config/webterm_profiles.yaml`
 
 5. **文档入口补齐**
 - 新增架构入门文档并在 README 中建立入口：
@@ -37,11 +37,11 @@
 
 ## 3. 推荐目录职责（开源视角）
 
-- `mini_agent/`：核心运行时代码（可开源）
+- `grape_agent/`：核心运行时代码（可开源）
 - `browser_plugin/`：客户端插件（可开源）
 - `docs/`：公开文档（可开源）
-- `mini_agent/config/config-example.yaml`：唯一公开模板（可开源）
-- `mini_agent/config/config.yaml`：建议仅用于本地（可保留为安全示例）
+- `grape_agent/config/config-example.yaml`：唯一公开模板（可开源）
+- `grape_agent/config/config.yaml`：建议仅用于本地（可保留为安全示例）
 - `docs/private/`：私有部署文档（不建议开源）
 
 ## 4. 发布前必检清单（每次发版都要做）
@@ -49,13 +49,13 @@
 1. **敏感信息扫描**
 
 ```bash
-rg -n "(api_key:|app_secret:|token:|PRIVATE KEY|BEGIN RSA|AKIA|sk-[A-Za-z0-9]|cli_[A-Za-z0-9]{10,})" mini_agent browser_plugin docs README.md README_CN.md
+rg -n "(api_key:|app_secret:|token:|PRIVATE KEY|BEGIN RSA|AKIA|sk-[A-Za-z0-9]|cli_[A-Za-z0-9]{10,})" grape_agent browser_plugin docs README.md README_CN.md
 ```
 
 2. **公网环境痕迹扫描**
 
 ```bash
-rg -n "(118\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|tengxun|tianyi|bastion)" docs browser_plugin mini_agent -S
+rg -n "(118\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|tengxun|tianyi|bastion)" docs browser_plugin grape_agent -S
 ```
 
 3. **确认 ignore 策略生效**
@@ -70,7 +70,7 @@ git status --short
 
 ```bash
 uv sync
-cp mini_agent/config/config-example.yaml mini_agent/config/config.yaml
+cp grape_agent/config/config-example.yaml grape_agent/config/config.yaml
 # 填入自己的测试 key 后执行
 uv run grape-agent --version
 ```
@@ -79,9 +79,9 @@ uv run grape-agent --version
 
 为减少误提交，建议将本地文件命名为：
 
-- `mini_agent/config/config.local.yaml`
-- `mini_agent/config/mcp.local.json`
-- `mini_agent/config/webterm_profiles.local.yaml`
+- `grape_agent/config/config.local.yaml`
+- `grape_agent/config/mcp.local.json`
+- `grape_agent/config/webterm_profiles.local.yaml`
 - `docs/private/*.md`
 
 并保持这些路径在 `.gitignore` 内。

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.tools.mcp_loader import (
+from grape_agent.tools.mcp_loader import (
     MCPServerConnection,
     MCPTimeoutConfig,
     _determine_connection_type,
@@ -21,9 +21,9 @@ from mini_agent.tools.mcp_loader import (
 @pytest.fixture(scope="module")
 def mcp_config():
     """Read MCP configuration."""
-    mcp_config_path = Path("mini_agent/config/mcp.json")
+    mcp_config_path = Path("grape_agent/config/mcp.json")
     if not mcp_config_path.exists():
-        mcp_config_path = Path("mini_agent/config/mcp-example.json")
+        mcp_config_path = Path("grape_agent/config/mcp-example.json")
     with open(mcp_config_path, encoding="utf-8") as f:
         return json.load(f)
 
@@ -339,7 +339,7 @@ async def test_mcp_tools_loading():
 
     try:
         # Load MCP tools
-        tools = await load_mcp_tools_async("mini_agent/config/mcp.json")
+        tools = await load_mcp_tools_async("grape_agent/config/mcp.json")
 
         print(f"Loaded {len(tools)} MCP tools")
 
@@ -371,7 +371,7 @@ async def test_git_mcp_loading(mcp_config):
 
     try:
         # Load MCP tools
-        tools = await load_mcp_tools_async("mini_agent/config/mcp.json")
+        tools = await load_mcp_tools_async("grape_agent/config/mcp.json")
 
         print("\n✅ Loaded successfully!")
         print("\n📊 Statistics:")
@@ -426,7 +426,7 @@ async def test_git_mcp_tool_availability():
     print("\n=== Testing Git MCP Tool Availability ===")
 
     try:
-        tools = await load_mcp_tools_async("mini_agent/config/mcp.json")
+        tools = await load_mcp_tools_async("grape_agent/config/mcp.json")
 
         if not tools:
             pytest.skip("No MCP tools loaded")
@@ -452,7 +452,7 @@ async def test_mcp_tool_execution():
     print("\n=== Testing MCP Tool Execution ===")
 
     try:
-        tools = await load_mcp_tools_async("mini_agent/config/mcp.json")
+        tools = await load_mcp_tools_async("grape_agent/config/mcp.json")
 
         if not tools:
             print("⚠️  No MCP tools loaded, skipping execution test")

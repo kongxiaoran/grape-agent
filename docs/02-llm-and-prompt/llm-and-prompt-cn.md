@@ -14,10 +14,10 @@
 
 核心文件：
 
-- `mini_agent/llm/anthropic_client.py`
-- `mini_agent/llm/openai_client.py`
-- `mini_agent/runtime_factory.py`
-- `mini_agent/schema/schema.py`
+- `grape_agent/llm/anthropic_client.py`
+- `grape_agent/llm/openai_client.py`
+- `grape_agent/runtime_factory.py`
+- `grape_agent/schema/schema.py`
 
 关键点：
 
@@ -39,12 +39,12 @@
 ## 代码行号引用
 
 - 运行时身份与日期护栏注入：`apply_runtime_identity_prompt()`  
-  `mini_agent/runtime_factory.py:70`
+  `grape_agent/runtime_factory.py:70`
 - LLM 客户端构建与 provider/model 选择：`create_llm_client()`  
-  `mini_agent/runtime_factory.py:41`, `mini_agent/runtime_factory.py:53`, `mini_agent/runtime_factory.py:55`
+  `grape_agent/runtime_factory.py:41`, `grape_agent/runtime_factory.py:53`, `grape_agent/runtime_factory.py:55`
 - 统一响应结构定义（`LLMResponse` / `TokenUsage` / `ProviderEvent`）  
-  `mini_agent/schema/schema.py:40`, `mini_agent/schema/schema.py:50`, `mini_agent/schema/schema.py:59`
+  `grape_agent/schema/schema.py:40`, `grape_agent/schema/schema.py:50`, `grape_agent/schema/schema.py:59`
 - Anthropic provider events 与 usage 解析  
-  `mini_agent/llm/anthropic_client.py:294`, `mini_agent/llm/anthropic_client.py:322`
+  `grape_agent/llm/anthropic_client.py:294`, `grape_agent/llm/anthropic_client.py:322`
 - OpenAI usage 解析（provider_events 当前为 `None`）  
-  `mini_agent/llm/openai_client.py:289`, `mini_agent/llm/openai_client.py:302`
+  `grape_agent/llm/openai_client.py:289`, `grape_agent/llm/openai_client.py:302`

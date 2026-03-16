@@ -1,7 +1,7 @@
 # 开源提交候选清单（当前工作区）
 
 > 目标：把当前大量改动整理成可公开发布的 commit 方案。  
-> 说明：当前工作区存在跨特性共改文件（如 `mini_agent/cli.py`、`mini_agent/config.py`），若追求高质量历史，建议使用 `git add -p` 分块提交。
+> 说明：当前工作区存在跨特性共改文件（如 `grape_agent/cli.py`、`grape_agent/config.py`），若追求高质量历史，建议使用 `git add -p` 分块提交。
 
 ## 1. 建议先决条件
 
@@ -16,7 +16,7 @@ git status --short --ignored | rg DEPLOY_ONEFILE
 2. 再跑一次去敏扫描：
 
 ```bash
-rg -n "(api_key:|app_secret:|token:|PRIVATE KEY|118\.89\.73\.230|10\.200\.10\.24)" mini_agent browser_plugin docs README.md README_CN.md -S
+rg -n "(api_key:|app_secret:|token:|PRIVATE KEY|118\.89\.73\.230|10\.200\.10\.24)" grape_agent browser_plugin docs README.md README_CN.md -S
 ```
 
 ## 2. 提交策略
@@ -56,8 +56,8 @@ git commit -m "feat: open-source baseline with multi-agent runtime, channels, ga
 - `README_CN.md`
 - `browser_plugin/chrome-webterm-agent/service_worker.js`
 - `browser_plugin/chrome-webterm-agent/README.md`
-- `mini_agent/config/config.yaml`
-- `mini_agent/config/webterm_profiles.yaml`
+- `grape_agent/config/config.yaml`
+- `grape_agent/config/webterm_profiles.yaml`
 - `docs/OPEN_SOURCE_PREP_CN.md`
 - `docs/WEBTERM_BRIDGE_PLUGIN_QUICKSTART_CN.md`
 - `tests/test_webterm_bridge_profiles.py`
@@ -67,7 +67,7 @@ git commit -m "feat: open-source baseline with multi-agent runtime, channels, ga
 ```bash
 git add .gitignore README.md README_CN.md
 git add browser_plugin/chrome-webterm-agent/service_worker.js browser_plugin/chrome-webterm-agent/README.md
-git add mini_agent/config/config.yaml mini_agent/config/webterm_profiles.yaml
+git add grape_agent/config/config.yaml grape_agent/config/webterm_profiles.yaml
 git add docs/OPEN_SOURCE_PREP_CN.md docs/WEBTERM_BRIDGE_PLUGIN_QUICKSTART_CN.md
 git add tests/test_webterm_bridge_profiles.py
 git commit -m "chore: sanitize configs and prepare repository for open source"
@@ -79,21 +79,21 @@ git commit -m "chore: sanitize configs and prepare repository for open source"
 
 建议包含：
 
-- `mini_agent/agents/`
-- `mini_agent/routing/`
-- `mini_agent/session_store.py`
-- `mini_agent/tools/sessions_spawn_tool.py`
-- `mini_agent/tools/sessions_send_tool.py`
-- `mini_agent/tools/sessions_list_tool.py`
-- `mini_agent/tools/sessions_history_tool.py`
-- `mini_agent/tools/tool_policy.py`
+- `grape_agent/agents/`
+- `grape_agent/routing/`
+- `grape_agent/session_store.py`
+- `grape_agent/tools/sessions_spawn_tool.py`
+- `grape_agent/tools/sessions_send_tool.py`
+- `grape_agent/tools/sessions_list_tool.py`
+- `grape_agent/tools/sessions_history_tool.py`
+- `grape_agent/tools/tool_policy.py`
 - `tests/test_agent_registry.py`
 - `tests/test_routing_resolver.py`
 - `tests/test_session_store.py`
 - `tests/test_sessions_tools.py`
 - `tests/test_subagent_orchestrator.py`
 
-注意：`mini_agent/cli.py`、`mini_agent/runtime_factory.py` 涉及多特性，建议本批使用 `git add -p` 仅添加会话/编排相关片段。
+注意：`grape_agent/cli.py`、`grape_agent/runtime_factory.py` 涉及多特性，建议本批使用 `git add -p` 仅添加会话/编排相关片段。
 
 提交信息建议：
 
@@ -107,19 +107,19 @@ feat: add multi-agent profiles, routing and subagent orchestration
 
 建议包含：
 
-- `mini_agent/channels/`
-- `mini_agent/feishu/bridge.py`
-- `mini_agent/feishu/client.py`
-- `mini_agent/feishu/embedded_runner.py`
-- `mini_agent/feishu/server_ws.py`
-- `mini_agent/feishu/rendering.py`
+- `grape_agent/channels/`
+- `grape_agent/feishu/bridge.py`
+- `grape_agent/feishu/client.py`
+- `grape_agent/feishu/embedded_runner.py`
+- `grape_agent/feishu/server_ws.py`
+- `grape_agent/feishu/rendering.py`
 - `tests/test_channels_runtime.py`
 - `tests/test_feishu_bridge_routing.py`
 - `tests/test_feishu_bridge_streaming.py`
 - `tests/test_feishu_channel_plugin.py`
 - `tests/test_config_feishu.py`
 
-注意：`mini_agent/config.py`、`mini_agent/config/config-example.yaml` 也有 Feishu 配置变更，建议 `git add -p` 拆到该批。
+注意：`grape_agent/config.py`、`grape_agent/config/config-example.yaml` 也有 Feishu 配置变更，建议 `git add -p` 拆到该批。
 
 提交信息建议：
 
@@ -133,14 +133,14 @@ feat: pluginize channels and integrate embedded feishu runtime
 
 建议包含：
 
-- `mini_agent/gateway/`
-- `mini_agent/cron/`
+- `grape_agent/gateway/`
+- `grape_agent/cron/`
 - `tests/test_gateway_router.py`
 - `tests/test_gateway_cron.py`
 - `tests/test_config_gateway.py`
 - `tests/test_config_cron.py`
 
-注意：`mini_agent/cli.py`、`mini_agent/config.py`、`mini_agent/config/config-example.yaml` 相关片段建议用 `git add -p`。
+注意：`grape_agent/cli.py`、`grape_agent/config.py`、`grape_agent/config/config-example.yaml` 相关片段建议用 `git add -p`。
 
 提交信息建议：
 
@@ -154,15 +154,15 @@ feat: add gateway control plane and cron scheduler execution pipeline
 
 建议包含：
 
-- `mini_agent/webterm_bridge/`
+- `grape_agent/webterm_bridge/`
 - `tests/test_webterm_bridge_session_manager.py`
 - `tests/test_webterm_bridge_utils.py`
 - `tests/test_config_webterm_bridge.py`
 
 可选包含（若你希望 bridge 相关配置同批）：
 
-- `mini_agent/config/webterm_profiles.yaml`
-- `mini_agent/config/config-example.yaml` 中 webterm 段
+- `grape_agent/config/webterm_profiles.yaml`
+- `grape_agent/config/config-example.yaml` 中 webterm 段
 
 提交信息建议：
 
@@ -219,9 +219,9 @@ docs: add architecture guides, deployment notes and open source prep checklist
 
 - `docs/DEPLOY_ONEFILE_TENGXUN1_RUNBOOK_CN.md`（已由 `.gitignore` 隔离）
 - 任意本地私有配置文件：
-  - `mini_agent/config/config.local.yaml`
-  - `mini_agent/config/mcp.local.json`
-  - `mini_agent/config/webterm_profiles.local.yaml`
+  - `grape_agent/config/config.local.yaml`
+  - `grape_agent/config/mcp.local.json`
+  - `grape_agent/config/webterm_profiles.local.yaml`
 - 办公/演示产物：`*.pptx`、本地总结文档
 
 ## 5. 最终发布前建议命令
@@ -234,6 +234,6 @@ git status --short
 pytest -q tests/test_gateway_router.py tests/test_feishu_channel_plugin.py tests/test_webterm_bridge_session_manager.py
 
 # 3) 二次去敏扫描
-rg -n "(api_key:|app_secret:|token:|PRIVATE KEY|118\.89\.73\.230|10\.200\.10\.24)" mini_agent browser_plugin docs README.md README_CN.md -S
+rg -n "(api_key:|app_secret:|token:|PRIVATE KEY|118\.89\.73\.230|10\.200\.10\.24)" grape_agent browser_plugin docs README.md README_CN.md -S
 ```
 

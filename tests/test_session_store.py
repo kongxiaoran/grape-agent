@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mini_agent.session_store import AgentSessionStore
+from grape_agent.session_store import AgentSessionStore
 
 
 class _DummyAgent:

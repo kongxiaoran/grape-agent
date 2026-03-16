@@ -1,5 +1,5 @@
-recursive-include mini_agent/skills *
-include mini_agent/skills/README.md
-include mini_agent/skills/THIRD_PARTY_NOTICES.md
-include mini_agent/skills/agent_skills_spec.md
+recursive-include grape_agent/skills *
+include grape_agent/skills/README.md
+include grape_agent/skills/THIRD_PARTY_NOTICES.md
+include grape_agent/skills/agent_skills_spec.md
 

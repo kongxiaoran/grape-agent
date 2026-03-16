@@ -14,11 +14,11 @@ Cron 模块用于周期任务执行，并把结果投递到指定通道。
 
 核心文件：
 
-- `mini_agent/cron/models.py`
-- `mini_agent/cron/store.py`
-- `mini_agent/cron/scheduler.py`
-- `mini_agent/cron/executor.py`
-- `mini_agent/cron/delivery.py`
+- `grape_agent/cron/models.py`
+- `grape_agent/cron/store.py`
+- `grape_agent/cron/scheduler.py`
+- `grape_agent/cron/executor.py`
+- `grape_agent/cron/delivery.py`
 
 关键点：
 
@@ -35,12 +35,12 @@ Cron 模块用于周期任务执行，并把结果投递到指定通道。
 ## 代码行号引用
 
 - Cron 配置项（并发、轮询、默认超时）  
-  `mini_agent/config.py:198`, `mini_agent/config.py:203`, `mini_agent/config.py:205`
+  `grape_agent/config.py:198`, `grape_agent/config.py:203`, `grape_agent/config.py:205`
 - 调度器轮询与并发信号量  
-  `mini_agent/cron/scheduler.py:16`, `mini_agent/cron/scheduler.py:31`, `mini_agent/cron/scheduler.py:71`
+  `grape_agent/cron/scheduler.py:16`, `grape_agent/cron/scheduler.py:31`, `grape_agent/cron/scheduler.py:71`
 - 执行器会话策略（`sticky`/`isolated`）与超时控制  
-  `mini_agent/cron/executor.py:16`, `mini_agent/cron/executor.py:47`, `mini_agent/cron/executor.py:77`
+  `grape_agent/cron/executor.py:16`, `grape_agent/cron/executor.py:47`, `grape_agent/cron/executor.py:77`
 - 结果回投递到通道  
-  `mini_agent/cron/delivery.py:10`, `mini_agent/cron/delivery.py:16`, `mini_agent/cron/delivery.py:32`
+  `grape_agent/cron/delivery.py:10`, `grape_agent/cron/delivery.py:16`, `grape_agent/cron/delivery.py:32`
 - Gateway 的 `cron.*` 方法入口  
-  `mini_agent/gateway/handlers/cron.py:8`, `mini_agent/gateway/handlers/cron.py:24`, `mini_agent/gateway/handlers/cron.py:66`
+  `grape_agent/gateway/handlers/cron.py:8`, `grape_agent/gateway/handlers/cron.py:24`, `grape_agent/gateway/handlers/cron.py:66`

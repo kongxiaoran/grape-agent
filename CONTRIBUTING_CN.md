@@ -168,7 +168,7 @@ async def process_messages(
 
 ```python
 import pytest
-from mini_agent.tools.my_tool import MyTool
+from grape_agent.tools.my_tool import MyTool
 
 @pytest.mark.asyncio
 async def test_my_tool():

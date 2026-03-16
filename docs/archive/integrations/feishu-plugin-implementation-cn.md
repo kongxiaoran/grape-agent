@@ -9,12 +9,12 @@
 
 实现文件集中在：
 
-- `mini_agent/feishu/server_ws.py`
-- `mini_agent/feishu/bridge.py`
-- `mini_agent/feishu/client.py`
-- `mini_agent/feishu/message_utils.py`
-- `mini_agent/feishu/dedup.py`
-- `mini_agent/feishu/types.py`
+- `grape_agent/feishu/server_ws.py`
+- `grape_agent/feishu/bridge.py`
+- `grape_agent/feishu/client.py`
+- `grape_agent/feishu/message_utils.py`
+- `grape_agent/feishu/dedup.py`
+- `grape_agent/feishu/types.py`
 
 并新增：
 
@@ -170,7 +170,7 @@ flowchart LR
 grape-agent-feishu \
   --app-id "cli_xxx" \
   --app-secret "xxx" \
-  --config mini_agent/config/config.yaml
+  --config grape_agent/config/config.yaml
 ```
 
 ### 8.2 联调验证步骤

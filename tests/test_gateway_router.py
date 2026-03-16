@@ -8,19 +8,19 @@ from types import SimpleNamespace
 
 import pytest
 
-from mini_agent.agents.orchestrator import SessionOrchestrator
-from mini_agent.config import Config
-from mini_agent.gateway.handlers import register_builtin_handlers
-from mini_agent.gateway.protocol import (
+from grape_agent.agents.orchestrator import SessionOrchestrator
+from grape_agent.config import Config
+from grape_agent.gateway.handlers import register_builtin_handlers
+from grape_agent.gateway.protocol import (
     ERR_INTERNAL,
     ERR_METHOD_NOT_FOUND,
     ConnectionContext,
     GatewayContext,
     GatewayRequest,
 )
-from mini_agent.gateway.router import GatewayRouter
-from mini_agent.gateway.server import GatewayServer
-from mini_agent.session_store import AgentSessionStore
+from grape_agent.gateway.router import GatewayRouter
+from grape_agent.gateway.server import GatewayServer
+from grape_agent.session_store import AgentSessionStore
 
 
 class _DummyRuntime:

@@ -48,7 +48,7 @@ python examples/02_simple_agent.py
 - 任务完成的判断标准
 
 **前置要求**:
-- 已配置 `mini_agent/config/config.yaml` 中的 API key
+- 已配置 `grape_agent/config/config.yaml` 中的 API key
 
 ---
 
@@ -110,10 +110,10 @@ python examples/04_full_agent.py
 
 ```bash
 # 复制配置模板
-cp mini_agent/config/config-example.yaml mini_agent/config/config.yaml
+cp grape_agent/config/config-example.yaml grape_agent/config/config.yaml
 
 # 编辑配置文件，填入你的 MiniMax API Key
-vim mini_agent/config/config.yaml
+vim grape_agent/config/config.yaml
 ```
 
 ### 2. 运行第一个示例
@@ -159,7 +159,7 @@ python examples/02_simple_agent.py
 ### 路径 2: 深入理解
 1. 阅读并运行所有示例 (01 → 04)
 2. 阅读对应的测试用例 (`tests/`)
-3. 阅读核心实现代码 (`mini_agent/`)
+3. 阅读核心实现代码 (`grape_agent/`)
 4. 尝试修改示例，实现自己的功能
 
 ### 路径 3: 生产应用
@@ -176,7 +176,7 @@ python examples/02_simple_agent.py
 ```
 ❌ API key not configured in config.yaml
 ```
-**解决**: 确保在 `mini_agent/config/config.yaml` 中配置了有效的 MiniMax API Key
+**解决**: 确保在 `grape_agent/config/config.yaml` 中配置了有效的 MiniMax API Key
 
 ### 找不到 config.yaml
 ```
@@ -184,7 +184,7 @@ python examples/02_simple_agent.py
 ```
 **解决**:
 ```bash
-cp mini_agent/config/config-example.yaml mini_agent/config/config.yaml
+cp grape_agent/config/config-example.yaml grape_agent/config/config.yaml
 ```
 
 ### MCP 工具加载失败
@@ -199,7 +199,7 @@ cp mini_agent/config/config-example.yaml mini_agent/config/config.yaml
 
 - [项目主 README](../README.md) - 完整项目文档
 - [测试用例](../tests/) - 更多使用示例
-- [核心实现](../mini_agent/) - 源代码
+- [核心实现](../grape_agent/) - 源代码
 - [生产环境指南](../docs/PRODUCTION_GUIDE.md) - 部署指南
 
 ---

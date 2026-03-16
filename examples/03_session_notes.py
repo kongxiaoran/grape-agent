@@ -11,11 +11,11 @@ import json
 import tempfile
 from pathlib import Path
 
-from mini_agent import LLMClient
-from mini_agent.agent import Agent
-from mini_agent.config import Config
-from mini_agent.tools import BashTool, ReadTool, WriteTool
-from mini_agent.tools.note_tool import RecallNoteTool, SessionNoteTool
+from grape_agent import LLMClient
+from grape_agent.agent import Agent
+from grape_agent.config import Config
+from grape_agent.tools import BashTool, ReadTool, WriteTool
+from grape_agent.tools.note_tool import RecallNoteTool, SessionNoteTool
 
 
 async def demo_direct_note_usage():
@@ -81,7 +81,7 @@ async def demo_agent_with_notes():
     print("=" * 60)
 
     # Load configuration
-    config_path = Path("mini_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/config.yaml")
     if not config_path.exists():
         print("❌ config.yaml not found")
         return
@@ -96,7 +96,7 @@ async def demo_agent_with_notes():
         print(f"📁 Workspace: {workspace_dir}\n")
 
         # Load system prompt (Agent will auto-inject workspace info)
-        system_prompt_path = Path("mini_agent/config/system_prompt.md")
+        system_prompt_path = Path("grape_agent/config/system_prompt.md")
         if system_prompt_path.exists():
             system_prompt = system_prompt_path.read_text(encoding="utf-8")
         else:

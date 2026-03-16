@@ -13,12 +13,12 @@ import asyncio
 import tempfile
 from pathlib import Path
 
-from mini_agent import LLMClient
-from mini_agent.agent import Agent
-from mini_agent.config import Config
-from mini_agent.tools import BashTool, EditTool, ReadTool, WriteTool
-from mini_agent.tools.mcp_loader import load_mcp_tools_async
-from mini_agent.tools.note_tool import RecallNoteTool, SessionNoteTool
+from grape_agent import LLMClient
+from grape_agent.agent import Agent
+from grape_agent.config import Config
+from grape_agent.tools import BashTool, EditTool, ReadTool, WriteTool
+from grape_agent.tools.mcp_loader import load_mcp_tools_async
+from grape_agent.tools.note_tool import RecallNoteTool, SessionNoteTool
 
 
 async def demo_full_agent():
@@ -28,10 +28,10 @@ async def demo_full_agent():
     print("=" * 60)
 
     # Load configuration
-    config_path = Path("mini_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/config.yaml")
     if not config_path.exists():
         print("❌ config.yaml not found. Please run:")
-        print("   cp mini_agent/config/config-example.yaml mini_agent/config/config.yaml")
+        print("   cp grape_agent/config/config-example.yaml grape_agent/config/config.yaml")
         return
 
     config = Config.from_yaml(config_path)
@@ -46,7 +46,7 @@ async def demo_full_agent():
         print(f"📁 Workspace: {workspace_dir}")
 
         # Load system prompt (Agent will auto-inject workspace info)
-        system_prompt_path = Path("mini_agent/config/system_prompt.md")
+        system_prompt_path = Path("grape_agent/config/system_prompt.md")
         if system_prompt_path.exists():
             system_prompt = system_prompt_path.read_text(encoding="utf-8")
         else:
@@ -90,7 +90,7 @@ You have record_note and recall_notes tools. Use them to:
 
         # Load MCP tools (if configured)
         try:
-            mcp_tools = await load_mcp_tools_async(config_path="mini_agent/config/mcp.json")
+            mcp_tools = await load_mcp_tools_async(config_path="grape_agent/config/mcp.json")
             if mcp_tools:
                 tools.extend(mcp_tools)
                 print(f"✓ Loaded {len(mcp_tools)} MCP tools")
@@ -192,7 +192,7 @@ async def demo_interactive_mode():
     print("(In production, use `grape-agent` for full interactive mode)")
 
     # Load config
-    config_path = Path("mini_agent/config/config.yaml")
+    config_path = Path("grape_agent/config/config.yaml")
     if not config_path.exists():
         print("❌ config.yaml not found")
         return

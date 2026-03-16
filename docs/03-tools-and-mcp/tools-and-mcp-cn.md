@@ -14,11 +14,11 @@
 
 核心文件：
 
-- `mini_agent/tools/base.py`
-- `mini_agent/tools/file_tools.py`
-- `mini_agent/tools/bash_tool.py`
-- `mini_agent/tools/mcp_loader.py`
-- `mini_agent/tools/skill_tool.py`
+- `grape_agent/tools/base.py`
+- `grape_agent/tools/file_tools.py`
+- `grape_agent/tools/bash_tool.py`
+- `grape_agent/tools/mcp_loader.py`
+- `grape_agent/tools/skill_tool.py`
 
 关键能力：
 
@@ -41,12 +41,12 @@
 ## 代码行号引用
 
 - 工具抽象基类：`Tool` / `ToolResult`  
-  `mini_agent/tools/base.py:8`
+  `grape_agent/tools/base.py:8`
 - 文件工具实现与真实工具名（`read_file/write_file/edit_file`）  
-  `mini_agent/tools/file_tools.py:63`, `mini_agent/tools/file_tools.py:155`, `mini_agent/tools/file_tools.py:212`
+  `grape_agent/tools/file_tools.py:63`, `grape_agent/tools/file_tools.py:155`, `grape_agent/tools/file_tools.py:212`
 - Bash 工具与后台进程相关工具（`bash`）  
-  `mini_agent/tools/bash_tool.py:217`, `mini_agent/tools/bash_tool.py:238`
+  `grape_agent/tools/bash_tool.py:217`, `grape_agent/tools/bash_tool.py:238`
 - MCP 动态加载与超时配置  
-  `mini_agent/tools/mcp_loader.py:21`, `mini_agent/tools/mcp_loader.py:46`, `mini_agent/tools/mcp_loader.py:183`
+  `grape_agent/tools/mcp_loader.py:21`, `grape_agent/tools/mcp_loader.py:46`, `grape_agent/tools/mcp_loader.py:183`
 - Skill 按需展开工具（`get_skill`）  
-  `mini_agent/tools/skill_tool.py:13`, `mini_agent/tools/skill_tool.py:57`
+  `grape_agent/tools/skill_tool.py:13`, `grape_agent/tools/skill_tool.py:57`

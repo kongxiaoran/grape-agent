@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.agent import Agent
-from mini_agent.schema import LLMResponse, Message
+from grape_agent.agent import Agent
+from grape_agent.schema import LLMResponse, Message
 
 
 class _DummyLLM:

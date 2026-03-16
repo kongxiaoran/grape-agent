@@ -1,7 +1,7 @@
 """Tests for console renderer behavior."""
 
-from mini_agent.schema import ProviderEvent
-from mini_agent.ui.renderer import ConsoleRenderer, RendererOptions
+from grape_agent.schema import ProviderEvent
+from grape_agent.ui.renderer import ConsoleRenderer, RendererOptions
 
 
 def test_renderer_claude_hides_step_headers_and_timing(capsys):
@@ -35,7 +35,7 @@ def test_renderer_tool_call_summary(capsys):
 
 
 def test_renderer_tool_result_compact_for_claude(capsys):
-    from mini_agent.tools.base import ToolResult
+    from grape_agent.tools.base import ToolResult
 
     renderer = ConsoleRenderer(RendererOptions(style="claude", show_tool_args=False))
     renderer.tool_result("record_note", ToolResult(success=True, content="Recorded note: hello"))

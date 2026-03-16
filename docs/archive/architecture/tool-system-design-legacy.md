@@ -291,7 +291,7 @@ LLM 根据这个描述决定要不要调用，以及传什么参数。
 
 ## 6. 相关源码文件
 
-- `mini_agent/tools/base.py` - Tool 基类定义
-- `mini_agent/tools/file_tools.py` - 文件操作工具（ReadTool/WriteTool/EditTool）
-- `mini_agent/tools/bash_tool.py` - Shell 命令工具
-- `mini_agent/runtime_factory.py` - 工具注入和装配逻辑
+- `grape_agent/tools/base.py` - Tool 基类定义
+- `grape_agent/tools/file_tools.py` - 文件操作工具（ReadTool/WriteTool/EditTool）
+- `grape_agent/tools/bash_tool.py` - Shell 命令工具
+- `grape_agent/runtime_factory.py` - 工具注入和装配逻辑

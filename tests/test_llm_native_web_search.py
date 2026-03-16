@@ -3,8 +3,8 @@
 import asyncio
 from types import SimpleNamespace
 
-from mini_agent.llm.anthropic_client import AnthropicClient
-from mini_agent.llm.openai_client import OpenAIClient
+from grape_agent.llm.anthropic_client import AnthropicClient
+from grape_agent.llm.openai_client import OpenAIClient
 
 
 class _CreateRecorder:

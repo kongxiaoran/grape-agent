@@ -1,7 +1,7 @@
 """Tests for webterm bridge session manager."""
 
-from mini_agent.config import WebtermBridgeConfig
-from mini_agent.webterm_bridge.session_manager import WebtermSessionManager
+from grape_agent.config import WebtermBridgeConfig
+from grape_agent.webterm_bridge.session_manager import WebtermSessionManager
 
 
 class _DummyGateway:

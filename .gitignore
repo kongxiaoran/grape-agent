@@ -66,9 +66,9 @@ CLAUDE.md
 .agent_memory.json
 
 # Local/private files not for open-source publishing
-mini_agent/config/config.local.yaml
-mini_agent/config/mcp.local.json
-mini_agent/config/webterm_profiles.local.yaml
+grape_agent/config/config.local.yaml
+grape_agent/config/mcp.local.json
+grape_agent/config/webterm_profiles.local.yaml
 
 # Private deployment notes (environment-specific)
 docs/DEPLOY_ONEFILE_*_RUNBOOK_CN.md

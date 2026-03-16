@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from mini_agent.config import Config
-from mini_agent.routing import RoutingInput, RoutingResolver
+from grape_agent.config import Config
+from grape_agent.routing import RoutingInput, RoutingResolver
 
 
 def _write_config(path: Path, content: str) -> Path:

@@ -59,8 +59,8 @@
 
 ### 5.1 抽离统一渲染器
 新增：
-- `mini_agent/ui/renderer.py`
-- `mini_agent/ui/__init__.py`
+- `grape_agent/ui/renderer.py`
+- `grape_agent/ui/__init__.py`
 
 核心能力：
 - 支持 `legacy / compact / claude`
@@ -117,18 +117,18 @@ native_web_search:
 ## 7. 本次改动文件清单
 
 ### 7.1 核心代码
-- `mini_agent/schema/schema.py`
-- `mini_agent/schema/__init__.py`
-- `mini_agent/llm/anthropic_client.py`
-- `mini_agent/llm/openai_client.py`
-- `mini_agent/agent.py`
-- `mini_agent/logger.py`
-- `mini_agent/ui/renderer.py`
-- `mini_agent/ui/__init__.py`
-- `mini_agent/config.py`
-- `mini_agent/cli.py`
-- `mini_agent/config/config-example.yaml`
-- `mini_agent/config/config.yaml`
+- `grape_agent/schema/schema.py`
+- `grape_agent/schema/__init__.py`
+- `grape_agent/llm/anthropic_client.py`
+- `grape_agent/llm/openai_client.py`
+- `grape_agent/agent.py`
+- `grape_agent/logger.py`
+- `grape_agent/ui/renderer.py`
+- `grape_agent/ui/__init__.py`
+- `grape_agent/config.py`
+- `grape_agent/cli.py`
+- `grape_agent/config/config-example.yaml`
+- `grape_agent/config/config.yaml`
 
 ### 7.2 测试
 - `tests/test_config_native_web_search.py`

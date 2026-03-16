@@ -36,11 +36,11 @@ dev = [
 ]
 
 [project.scripts]
-grape-agent = "mini_agent.cli:main"
-grape = "mini_agent.cli:main"
-grape-agent-acp = "mini_agent.acp.server:main"
-grape-agent-feishu = "mini_agent.feishu.server_ws:main"
-grape-agent-webterm-bridge = "mini_agent.webterm_bridge.server:main"
+grape-agent = "grape_agent.cli:main"
+grape = "grape_agent.cli:main"
+grape-agent-acp = "grape_agent.acp.server:main"
+grape-agent-feishu = "grape_agent.feishu.server_ws:main"
+grape-agent-webterm-bridge = "grape_agent.webterm_bridge.server:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]
@@ -50,13 +50,13 @@ build-backend = "setuptools.build_meta"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["mini_agent*"]
+include = ["grape_agent*"]
 exclude = ["tests*"]
 
 # Include skills directory (git submodule) as package data
-# After moving submodule to mini_agent/skills
+# After moving submodule to grape_agent/skills
 [tool.setuptools.package-data]
-mini_agent = ["skills/**/*"]
+grape_agent = ["skills/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

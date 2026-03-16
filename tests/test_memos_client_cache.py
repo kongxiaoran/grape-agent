@@ -1,7 +1,7 @@
 import sys
 import types
 
-import mini_agent.tools.memos_memory_tool as memos_memory_tool
+import grape_agent.tools.memos_memory_tool as memos_memory_tool
 
 
 class _DummyMemOSClient:

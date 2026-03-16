@@ -1,6 +1,6 @@
 """Tests for webterm bridge utility helpers."""
 
-from mini_agent.webterm_bridge.utils import classify_command_risk, extract_json_object, wrap_command
+from grape_agent.webterm_bridge.utils import classify_command_risk, extract_json_object, wrap_command
 
 
 def test_extract_json_object_direct():

@@ -37,7 +37,7 @@
 
 ```
 grape-agent/
-├── mini_agent/              # 核心源代码
+├── grape_agent/              # 核心源代码
 │   ├── agent.py             # 主 Agent 循环
 │   ├── llm.py               # LLM 客户端
 │   ├── cli.py               # 命令行接口
@@ -115,7 +115,7 @@ grape-agent/
 
 #### 步骤
 
-1.  在 `mini_agent/tools/` 目录下创建一个新的 Python 文件。
+1.  在 `grape_agent/tools/` 目录下创建一个新的 Python 文件。
 2.  在文件中定义一个新类，并继承 `Tool` 基类。
 3.  在类中实现所需的属性和方法。
 4.  在 Agent 初始化时注册你的新工具。
@@ -123,8 +123,8 @@ grape-agent/
 #### 示例
 
 ```python
-# mini_agent/tools/my_tool.py
-from mini_agent.tools.base import Tool, ToolResult
+# grape_agent/tools/my_tool.py
+from grape_agent.tools.base import Tool, ToolResult
 from typing import Dict, Any
 
 class MyTool(Tool):
@@ -183,7 +183,7 @@ class MyTool(Tool):
             )
 
 # 在 cli.py 或 Agent 的初始化代码中
-from mini_agent.tools.my_tool import MyTool
+from grape_agent.tools.my_tool import MyTool
 
 # 创建 Agent 实例时，将新工具加入列表
 tools = [

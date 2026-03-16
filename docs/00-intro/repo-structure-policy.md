@@ -2,7 +2,7 @@
 
 ## 目录分层原则
 
-- `mini_agent/`: 产品源码
+- `grape_agent/`: 产品源码
 - `tests/`: 单元与集成测试
 - `docs/`: 面向学习与实现的技术文档
 - `examples/`: 教学示例
@@ -32,5 +32,5 @@
 
 ## 代码行号引用
 
-- 源码主目录（运行入口）：`mini_agent/cli.py:1302`
-- 配置与目录搜索策略：`mini_agent/config.py:666`, `mini_agent/config.py:704`
+- 源码主目录（运行入口）：`grape_agent/cli.py:1302`
+- 配置与目录搜索策略：`grape_agent/config.py:666`, `grape_agent/config.py:704`

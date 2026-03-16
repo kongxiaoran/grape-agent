@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from mini_agent.config import Config
+from grape_agent.config import Config
 
 
 def test_default_config_prefers_grape_user_settings(tmp_path, monkeypatch):
@@ -25,7 +25,7 @@ def test_default_config_falls_back_to_legacy_yaml_before_template(tmp_path, monk
     monkeypatch.setattr(Path, "home", lambda: home)
 
     project_root = tmp_path / "project"
-    dev_cfg_dir = project_root / "mini_agent" / "config"
+    dev_cfg_dir = project_root / "grape_agent" / "config"
     dev_cfg_dir.mkdir(parents=True)
 
     legacy_yaml = dev_cfg_dir / "config.yaml"

@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.channels.registry import ChannelRegistry
-from mini_agent.channels.runtime import ChannelRuntime
-from mini_agent.channels.types import ChannelContext
-from mini_agent.config import Config
+from grape_agent.channels.registry import ChannelRegistry
+from grape_agent.channels.runtime import ChannelRuntime
+from grape_agent.channels.types import ChannelContext
+from grape_agent.config import Config
 
 
 class _DummyPlugin:

@@ -19,8 +19,8 @@
 
 核心代码：
 
-- `mini_agent/agent.py`
-- `mini_agent/runtime_factory.py`
+- `grape_agent/agent.py`
+- `grape_agent/runtime_factory.py`
 
 关键函数：
 
@@ -42,8 +42,8 @@
 ## 代码行号引用
 
 - 主循环与步数上限：`Agent.run()` 循环条件 `while step < self.max_steps`  
-  `mini_agent/agent.py:322`, `mini_agent/agent.py:343`
+  `grape_agent/agent.py:322`, `grape_agent/agent.py:343`
 - 摘要触发条件（超 token 阈值才执行）：`_summarize_messages()`  
-  `mini_agent/agent.py:181`, `mini_agent/agent.py:199`, `mini_agent/agent.py:202`
+  `grape_agent/agent.py:181`, `grape_agent/agent.py:199`, `grape_agent/agent.py:202`
 - 取消与清理：`_check_cancelled()`、`_cleanup_incomplete_messages()`  
-  `mini_agent/agent.py:91`, `mini_agent/agent.py:101`, `mini_agent/agent.py:345`, `mini_agent/agent.py:417`
+  `grape_agent/agent.py:91`, `grape_agent/agent.py:101`, `grape_agent/agent.py:345`, `grape_agent/agent.py:417`

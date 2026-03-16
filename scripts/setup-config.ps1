@@ -51,7 +51,7 @@ if (Test-Path $CONFIG_DIR) {
 Write-ColorOutput "[2/2] Downloading configuration files..." -Color "Blue"
 
 $FILES_COPIED = 0
-$GITHUB_RAW_URL = "https://raw.githubusercontent.com/MiniMax-AI/Grape-Agent/main/mini_agent/config"
+$GITHUB_RAW_URL = "https://raw.githubusercontent.com/MiniMax-AI/Grape-Agent/main/grape_agent/config"
 
 # Download config-example.yaml as config.yaml
 try {

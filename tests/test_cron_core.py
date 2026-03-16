@@ -8,8 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from mini_agent.cron import CronDelivery, CronExecutor, CronScheduler, CronStore, compute_next_run_at, parse_schedule
-from mini_agent.session_store import AgentSessionStore
+from grape_agent.cron import CronDelivery, CronExecutor, CronScheduler, CronStore, compute_next_run_at, parse_schedule
+from grape_agent.session_store import AgentSessionStore
 
 
 class _DummyAgent:

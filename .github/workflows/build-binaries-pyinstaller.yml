@@ -48,8 +48,8 @@ jobs:
             uv run --python 3.10 --with pyinstaller pyinstaller \
               --noconfirm --clean --onefile \
               --name "${output_name}" \
-              --collect-submodules mini_agent \
-              --collect-data mini_agent \
+              --collect-submodules grape_agent \
+              --collect-data grape_agent \
               --collect-submodules memos \
               --collect-data memos \
               --collect-submodules lark_oapi \
@@ -57,7 +57,7 @@ jobs:
               "${entry_file}"
           }
 
-          build_one "grape-agent" "mini_agent/cli.py"
+          build_one "grape-agent" "grape_agent/cli.py"
 
       - name: Build selected binaries (Windows)
         if: runner.os == 'Windows'
@@ -69,8 +69,8 @@ jobs:
             uv run --python 3.10 --with pyinstaller pyinstaller `
               --noconfirm --clean --onefile `
               --name $outputName `
-              --collect-submodules mini_agent `
-              --collect-data mini_agent `
+              --collect-submodules grape_agent `
+              --collect-data grape_agent `
               --collect-submodules memos `
               --collect-data memos `
               --collect-submodules lark_oapi `
@@ -78,7 +78,7 @@ jobs:
               $entryFile
           }
 
-          Build-One "grape-agent" "mini_agent/cli.py"
+          Build-One "grape-agent" "grape_agent/cli.py"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
