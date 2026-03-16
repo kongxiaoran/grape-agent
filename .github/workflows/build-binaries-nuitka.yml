@@ -1,0 +1,103 @@
+name: Build Grape-Agent Binaries (Nuitka)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Build target"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - grape-agent
+          - grape-agent-feishu
+          - grape-agent-webterm-bridge
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Build selected binaries (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="${{ github.event.inputs.target || 'all' }}"
+
+          build_one() {
+            local output_name="$1"
+            local entry_file="$2"
+            uv run --with nuitka python -m nuitka \
+              --onefile \
+              --assume-yes-for-downloads \
+              --follow-imports \
+              --include-package=mini_agent \
+              --include-package-data=mini_agent \
+              --output-dir=dist \
+              --output-filename="${output_name}" \
+              "${entry_file}"
+          }
+
+          if [[ "$TARGET" == "all" || "$TARGET" == "grape-agent" ]]; then
+            build_one "grape-agent" "mini_agent/cli.py"
+          fi
+          if [[ "$TARGET" == "all" || "$TARGET" == "grape-agent-feishu" ]]; then
+            build_one "grape-agent-feishu" "mini_agent/feishu/server_ws.py"
+          fi
+          if [[ "$TARGET" == "all" || "$TARGET" == "grape-agent-webterm-bridge" ]]; then
+            build_one "grape-agent-webterm-bridge" "mini_agent/webterm_bridge/server.py"
+          fi
+
+      - name: Build selected binaries (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $target = "${{ github.event.inputs.target || 'all' }}"
+
+          function Build-One([string]$outputName, [string]$entryFile) {
+            uv run --with nuitka python -m nuitka `
+              --onefile `
+              --assume-yes-for-downloads `
+              --follow-imports `
+              --include-package=mini_agent `
+              --include-package-data=mini_agent `
+              --output-dir=dist `
+              --output-filename=$outputName `
+              $entryFile
+          }
+
+          if ($target -eq "all" -or $target -eq "grape-agent") {
+            Build-One "grape-agent.exe" "mini_agent/cli.py"
+          }
+          if ($target -eq "all" -or $target -eq "grape-agent-feishu") {
+            Build-One "grape-agent-feishu.exe" "mini_agent/feishu/server_ws.py"
+          }
+          if ($target -eq "all" -or $target -eq "grape-agent-webterm-bridge") {
+            Build-One "grape-agent-webterm-bridge.exe" "mini_agent/webterm_bridge/server.py"
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: grape-agent-${{ matrix.os }}
+          path: dist/**
+          if-no-files-found: error
