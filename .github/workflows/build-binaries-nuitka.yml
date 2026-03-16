@@ -6,7 +6,7 @@ on:
       target:
         description: "Build target"
         required: true
-        default: "all"
+        default: "grape-agent"
         type: choice
         options:
           - all
@@ -19,6 +19,7 @@ on:
 
 jobs:
   build:
+    timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix:
@@ -40,7 +41,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TARGET="${{ github.event.inputs.target || 'all' }}"
+          TARGET="${{ github.event.inputs.target || 'grape-agent' }}"
 
           build_one() {
             local output_name="$1"
@@ -51,6 +52,13 @@ jobs:
               --follow-imports \
               --include-package=mini_agent \
               --include-package-data=mini_agent \
+              --noinclude-setuptools-mode=nofollow \
+              --noinclude-pytest-mode=nofollow \
+              --noinclude-unittest-mode=nofollow \
+              --noinclude-pydoc-mode=nofollow \
+              --noinclude-IPython-mode=nofollow \
+              --noinclude-dask-mode=nofollow \
+              --noinclude-numba-mode=nofollow \
               --output-dir=dist \
               --output-filename="${output_name}" \
               "${entry_file}"
@@ -71,7 +79,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $target = "${{ github.event.inputs.target || 'all' }}"
+          $target = "${{ github.event.inputs.target || 'grape-agent' }}"
 
           function Build-One([string]$outputName, [string]$entryFile) {
             uv run --with nuitka python -m nuitka `
@@ -80,6 +88,13 @@ jobs:
               --follow-imports `
               --include-package=mini_agent `
               --include-package-data=mini_agent `
+              --noinclude-setuptools-mode=nofollow `
+              --noinclude-pytest-mode=nofollow `
+              --noinclude-unittest-mode=nofollow `
+              --noinclude-pydoc-mode=nofollow `
+              --noinclude-IPython-mode=nofollow `
+              --noinclude-dask-mode=nofollow `
+              --noinclude-numba-mode=nofollow `
               --output-dir=dist `
               --output-filename=$outputName `
               $entryFile
