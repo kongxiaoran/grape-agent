@@ -140,14 +140,15 @@ docs/                      # 详细设计与部署文档
 - [README（中文）](./README.md)
 - [README（英文）](./README_EN.md)
 
-入门与学习：
+0) 基础概念（小白先看）：
 
-- [学习路线（中文）](docs/00-intro/learning-path-cn.md)
-- [仓库结构治理策略](docs/00-intro/repo-structure-policy.md)
+- [学习路线（中文）](docs/00-intro/learning-path-cn.md)（总入口，建议先读，10-15 分钟）
+- [Agent 核心概念（中文）](docs/00-intro/agent-core-concepts-cn.md)（术语解释，15-20 分钟）
+- [一次请求的端到端调用链（中文）](docs/00-intro/e2e-call-chain-cn.md)（从输入到回复的真实链路，15-20 分钟）
 
-核心模块：
+1) 项目实现走读（按模块）：
 
-- [运行时主循环](docs/01-runtime-loop/runtime-loop-cn.md)
+- [运行时主循环](docs/01-runtime-loop/runtime-loop-cn.md)（Agent loop 如何运行，20-30 分钟）
 - [模型接入与提示词注入](docs/02-llm-and-prompt/llm-and-prompt-cn.md)
 - [工具系统与 MCP](docs/03-tools-and-mcp/tools-and-mcp-cn.md)
 - [会话、路由与 Subagent](docs/04-session-routing-subagent/session-routing-subagent-cn.md)
@@ -155,7 +156,11 @@ docs/                      # 详细设计与部署文档
 - [Gateway 与 Webterm Bridge](docs/06-gateway-webterm/gateway-webterm-cn.md)
 - [Cron 与隔离执行](docs/07-cron-isolation/cron-isolation-cn.md)
 - [CLI 与终端交互 UI](docs/08-cli-ui/cli-ui-cn.md)
+
+2) 实操与运维：
+
 - [部署与运维](docs/09-deploy-ops/deploy-ops-cn.md)
+- [仓库结构治理策略](docs/00-intro/repo-structure-policy.md)
 
 治理与归档：
 

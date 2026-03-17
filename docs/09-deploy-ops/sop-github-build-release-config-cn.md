@@ -156,8 +156,8 @@ find /Users/kxr/learning/grape-agent/release/gha/<RUN_ID> -maxdepth 3 -type f
 
 代码依据：
 
-- `mini_agent/config.py`（`get_default_config_path`）
-- `mini_agent/cli.py`（配置搜索路径提示）
+- `grape_agent/config.py`（`get_default_config_path`）
+- `grape_agent/cli.py`（配置搜索路径提示）
 
 ## 7.1 macOS 配置
 
